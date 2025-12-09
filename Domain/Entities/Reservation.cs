@@ -7,7 +7,7 @@ using Domain.Enums;
 
 namespace Domain.Entities
 {
-    internal class Reservation
+    public class Reservation
     {
         public int Id { get; set; }
 
@@ -21,6 +21,6 @@ namespace Domain.Entities
         public DateTime? ExpirationDate { get; set; }
 
         public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
-        public int queuePosition { get; set; }
+        public int QueuePosition { get; set; }
     }
 }

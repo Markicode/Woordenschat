@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class Author
+    public class Author
     {
         public int Id { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
 
-        public string? bio { get; set; } 
+        public string? Bio { get; set; } 
         public DateTime? BirthDate { get; set; }
 
         public List<BookAuthor> BookAuthors { get; set; } = new();

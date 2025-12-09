@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class Book
+    public class Book
     {
         public int Id { get; set; }
-        public string isbn { get; set; } = string.Empty;
+        public string Isbn { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public DateTime? PublishedDate { get; set; }

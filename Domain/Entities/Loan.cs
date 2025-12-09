@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class Loan
+    public class Loan
     {
         public int Id { get; set; }
 

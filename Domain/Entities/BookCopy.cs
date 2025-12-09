@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class BookCopy
+    public class BookCopy
     {
         public int Id { get; set; }
 

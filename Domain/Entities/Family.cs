@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    internal class Family
+    public class Family
     {
         public int Id { get; set; }
         public string FamilyName { get; set; } = string.Empty;

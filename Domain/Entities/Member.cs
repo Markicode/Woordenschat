@@ -16,6 +16,7 @@ namespace Domain.Entities
         public DateTime MembershipStarted { get; set; }
         public bool IsActive { get; set; } = true;
 
+        public List<Reservation> Reservations { get; set; } = new();
         public List<Loan> Loans { get; set; } = new();
     }
 }

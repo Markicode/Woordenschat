@@ -15,5 +15,7 @@ namespace Domain.Entities
 
         public DateTime EmploymentDate { get; set; }
         public string Position { get; set; } = string.Empty;
+
+        public List<NewsPost> CreatedNewsPosts { get; set; } = new();
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.Identity.Client;
 using Domain.Entities;
 using System.ComponentModel.DataAnnotations;
+using System.Net.Sockets;
 
 namespace Data
 {
@@ -60,7 +61,7 @@ namespace Data
                 .Property(b => b.Description)
                 .HasMaxLength(2000);
 
-            // BookAuthor many-to-many join entity configuration 
+            // BookAuthor entity configuration 
             modelBuilder.Entity<BookAuthor>()
                 .HasKey(ba => new { ba.BookId, ba.AuthorId });
 
@@ -93,6 +94,105 @@ namespace Data
             modelBuilder.Entity<BookCopy>()
                 .HasIndex(bc => bc.InventoryNumber)
                 .IsUnique();
+
+            // Employee entity configuration
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.Position)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            // Family entity configuration
+
+            modelBuilder.Entity<Family>()
+                .HasMany(f => f.Members)
+                .WithOne(m => m.Family)
+                .HasForeignKey(m => m.FamilyId);
+
+            modelBuilder.Entity<Family>()
+                .Property(f => f.FamilyName)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<Family>()
+                .Property(f => f.Adress)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<Family>()
+                .Property(f => f.PostalCode)
+                .IsRequired()
+                .HasMaxLength(20);
+
+            modelBuilder.Entity<Family>()
+                .Property(f => f.City)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            // Genre entity configuration
+
+            modelBuilder.Entity<Genre>()
+                .Property(g => g.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<Genre>()
+                .HasOne(g => g.ParentGenre)
+                .WithMany(g => g.SubGenres)
+                .HasForeignKey(g => g.ParentGenreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Loan entity configuration
+
+            modelBuilder.Entity<Loan>()
+                .HasOne(l => l.BookCopy)
+                .WithMany(bc => bc.Loans)
+                .HasForeignKey(l => l.BookCopyId);
+
+            modelBuilder.Entity<Loan>()
+                .HasOne(l => l.Member)
+                .WithMany(m => m.Loans)
+                .HasForeignKey(l => l.MemberId);
+
+            // Member entity configuration
+
+            modelBuilder.Entity<Member>()
+                .Property(m => m.MembershipNumber)
+                .IsRequired()
+                .HasMaxLength(10);
+
+            modelBuilder.Entity<Member>()
+                .HasIndex(m => m.MembershipNumber)
+                .IsUnique();
+
+            modelBuilder.Entity<Member>()
+                .HasMany(m => m.Reservations)
+                .WithOne(r => r.Member)
+                .HasForeignKey(r => r.MemberId);
+
+            modelBuilder.Entity<Member>()
+                .HasMany(m => m.Loans)
+                .WithOne(l => l.Member)
+                .HasForeignKey(l => l.MemberId);
+
+            // NewsPost entity configuration
+
+            modelBuilder.Entity<NewsPost>()
+                .HasOne(np => np.CreatedByEmployee)
+                .WithMany(e => e.CreatedNewsPosts)
+                .HasForeignKey(np => np.CreatedByEmployeeId);
+
+            modelBuilder.Entity<NewsPost>()
+                .Property(np => np.Title)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<NewsPost>()
+                .Property(np => np.Content)
+                .IsRequired()
+                .HasMaxLength(5000);
+
+
 
 
 

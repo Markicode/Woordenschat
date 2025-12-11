@@ -11,6 +11,8 @@ namespace Domain.Entities
         public int Id { get; set; }
 
         public int PersonId { get; set; }
+        public string MembershipNumber { get; set; } = string.Empty;
+
         public Person Person { get; set; } = null!;
 
         public DateTime MembershipStarted { get; set; }

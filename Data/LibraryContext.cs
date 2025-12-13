@@ -102,6 +102,10 @@ namespace Data
                 .IsRequired()
                 .HasMaxLength(100);
 
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.PersonId)
+                .IsUnique();
+
             // Family entity configuration
 
             modelBuilder.Entity<Family>()
@@ -175,6 +179,10 @@ namespace Data
                 .WithOne(l => l.Member)
                 .HasForeignKey(l => l.MemberId);
 
+            modelBuilder.Entity<Member>()
+                .HasIndex(m => m.PersonId)
+                .IsUnique();
+
             // NewsPost entity configuration
 
             modelBuilder.Entity<NewsPost>()
@@ -208,6 +216,16 @@ namespace Data
                 .HasOne(p => p.User)
                 .WithMany(u => u.Persons)
                 .HasForeignKey(p => p.UserId);
+
+            modelBuilder.Entity<Person>()
+                .HasOne(p => p.Member)
+                .WithOne(m => m.Person)
+                .HasForeignKey<Member>(m => m.PersonId);
+
+            modelBuilder.Entity<Person>()
+                .HasOne(p => p.Employee)
+                .WithOne(e => e.Person)
+                .HasForeignKey<Employee>(e => e.PersonId);
 
 
             // Reservation entity configuration

@@ -18,5 +18,6 @@ namespace Domain.Entities
         public List<BookCopy> BookCopies { get; set; } = new();
 
         public List<Genre> Genres { get; set; } = new();
+        public List<Reservation> Reservations { get; set; } = new();
     }
 }

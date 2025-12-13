@@ -192,10 +192,47 @@ namespace Data
                 .IsRequired()
                 .HasMaxLength(5000);
 
+            // Person entity configuration
+
+            modelBuilder.Entity<Person>()
+                .Property(p => p.FirstName)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<Person>()
+                .Property(p => p.LastName)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<Person>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Persons)
+                .HasForeignKey(p => p.UserId);
 
 
+            // Reservation entity configuration
 
+            modelBuilder.Entity<Reservation>()
+                .HasOne(r => r.Member)
+                .WithMany(m => m.Reservations)
+                .HasForeignKey(r => r.MemberId);
 
+            modelBuilder.Entity<Reservation>()
+                .HasOne(r => r.Book)
+                .WithMany(b => b.Reservations)
+                .HasForeignKey(r => r.BookId);
+            
+            // User entity configuration
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.Email)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.PasswordHash)
+                .IsRequired()
+                .HasMaxLength(200);
         }
 
     }

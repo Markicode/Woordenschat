@@ -3,6 +3,7 @@ using Microsoft.Identity.Client;
 using Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Sockets;
+using Data.Seed;
 
 namespace Data
 {
@@ -31,35 +32,11 @@ namespace Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Author entity configuration 
-            modelBuilder.Entity<Author>()
-                .Property(a => a.FirstName)
-                .IsRequired()
-                .HasMaxLength(100);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(LibraryContext).Assembly);
 
-            modelBuilder.Entity<Author>()
-                .Property(a => a.LastName)
-                .IsRequired()
-                .HasMaxLength(100);
-
-            modelBuilder.Entity<Author>()
-                .Property(a => a.Bio)
-                .HasMaxLength(2000);
 
             // Book entity configuration 
-            modelBuilder.Entity<Book>()
-                .Property(b => b.Isbn)
-                .IsRequired()
-                .HasMaxLength(13);
-
-            modelBuilder.Entity<Book>()
-                .Property(b => b.Title)
-                .IsRequired()
-                .HasMaxLength(200);
-
-            modelBuilder.Entity<Book>()
-                .Property(b => b.Description)
-                .HasMaxLength(2000);
+            
 
             // BookAuthor entity configuration 
             modelBuilder.Entity<BookAuthor>()
@@ -251,6 +228,8 @@ namespace Data
                 .Property(u => u.PasswordHash)
                 .IsRequired()
                 .HasMaxLength(200);
+
+            GenreSeed.Seed(modelBuilder);
         }
 
     }

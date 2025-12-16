@@ -1,0 +1,9 @@
+﻿namespace WebApi.Dtos.Genres
+{
+    public class GenreDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int? ParentGenreId { get; set; }
+    }
+}

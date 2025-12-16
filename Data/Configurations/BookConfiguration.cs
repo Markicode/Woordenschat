@@ -16,7 +16,6 @@ namespace Data.Configurations
         {
             builder
                 .Property(b => b.Isbn)
-                .IsRequired()
                 .HasMaxLength(13);
 
             builder

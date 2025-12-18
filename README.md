@@ -32,7 +32,7 @@ The API supports managing books with multiple genres, including hierarchical gen
 
 ## Project Structure
 
-Library.sln
+```Library.sln
 ├── Domain
 │ └── Entities (Book, Genre, User, etc.)
 ├── Data
@@ -46,6 +46,7 @@ Library.sln
 │ └── API configuration
 └── Tests
 └── (Unit & integration tests – planned)
+```
 
 ---
 

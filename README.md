@@ -26,7 +26,7 @@ The API supports managing books with multiple genres, including hierarchical gen
 - **Entity Framework Core**
 - **MySQL / MariaDB**
 - **Swagger (OpenAPI)**
-- **xUnit** (testing – work in progress)
+- **xUnit (integration testing with ASP.NET WebApplicationFactory)** 
 
 ---
 
@@ -44,8 +44,11 @@ The API supports managing books with multiple genres, including hierarchical gen
 │ ├── Controllers
 │ ├── DTOs
 │ └── API configuration
-└── Tests
-└── (Unit & integration tests – planned)
+└── WebApi.Tests
+    ├── Controllers
+    │   ├── BooksControllerTests
+    │   └── GenresControllerTests
+    └── ApiFactory (test host configuration)
 ```
 
 ---
@@ -101,19 +104,28 @@ https://localhost:<port>/swagger
 
 ## Testing 
 
-This project includes automated tests using xUnit.
+This project includes automated integration tests using **xUnit**.
 
-Tests currently focus on:
+The tests run against the API using an in-memory test server
+(`WebApplicationFactory`), exercising the full HTTP request pipeline
+including routing, controllers, dependency injection, and Entity Framework Core.
 
-- API behavior
-- Data access logic
-- Validation scenarios
+Current test coverage includes:
 
-Run tests with:
+- Happy-path API behavior for books and genres
+- End-to-end HTTP request/response validation
+- Database interaction through EF Core
+- Verification of RESTful status codes
+
+Tests are executed using:
 
 ```bash 
 dotnet test
 ```
+
+The testing setup is intentionally focused on integration tests to validate
+realistic API behavior. Unit tests and additional edge-case coverage are
+planned as future improvements.
 
 ---
 
@@ -135,9 +147,10 @@ This project was created to practice and demonstrate:
 - Add user authentication and authorization
 - Implement pagination and filtering for book listings
 - Improved validation and error handling
-- Integration tests for API endpoints
 - Frontend applications to consume the API
-- CI pipeline 
+- CI pipeline
+- Expanded integration test coverage (edge cases, error scenarios)
+- Unit tests for domain and service logic
 
 ---
 

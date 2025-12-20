@@ -2,8 +2,7 @@
 using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using WebApi.Dtos.Books;
-using WebApi.Dtos.Genres;
+using WebApi.Dtos;
 
 namespace WebApi.Controllers
 {

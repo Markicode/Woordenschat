@@ -1,7 +1,7 @@
-﻿using WebApi.Dtos.Genres;
-
-namespace WebApi.Dtos.Books
+﻿
+namespace WebApi.Dtos
 {
+
     public class BookDto
     {
         public int Id { get; set; }

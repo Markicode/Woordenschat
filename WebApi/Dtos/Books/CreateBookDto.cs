@@ -1,5 +1,5 @@
 ﻿
-namespace WebApi.Dtos.Books
+namespace WebApi.Dtos
 {
     public class CreateBookDto
     {

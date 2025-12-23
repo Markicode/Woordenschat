@@ -35,6 +35,9 @@ namespace Data
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(LibraryContext).Assembly);
           
             GenreSeed.Seed(modelBuilder);
+            BookSeed.Seed(modelBuilder);
+            AuthorSeed.Seed(modelBuilder);  
+            BookAuthorSeed.Seed(modelBuilder);
         }
 
     }

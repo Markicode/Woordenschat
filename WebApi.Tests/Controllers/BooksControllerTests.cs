@@ -20,16 +20,20 @@ namespace WebApi.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetBooks_ReturnsOkResponse()
+        public async Task GetBooks_ReturnsBooks()
         {
             // Act
             var response = await _client.GetAsync("/api/books");
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            var books = await response.Content.ReadFromJsonAsync<List<BookDto>>();
+            Assert.NotNull(books);
+            
         }
 
         [Fact]
-        public async Task GetBookById_ReturnsOkResponse()
+        public async Task GetBookById_ReturnsBook()
         {
             var bookId = 1; // Assuming a book with ID 1 exists in the test database
             // Act

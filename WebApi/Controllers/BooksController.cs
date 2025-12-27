@@ -3,6 +3,7 @@ using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Dtos;
+using Application.Services.Books;
 
 namespace WebApi.Controllers
 {
@@ -12,10 +13,12 @@ namespace WebApi.Controllers
     public class BooksController : ControllerBase
     {
         private readonly LibraryContext _context;
+        private readonly IBookService _bookService;
 
-        public BooksController(LibraryContext context)
+        public BooksController(LibraryContext context, IBookService bookService)
         {
             _context = context;
+            _bookService = bookService;
         }
 
         [HttpGet]
@@ -80,45 +83,39 @@ namespace WebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<BookDto>> Post(CreateBookDto dto)
         {
-            var genreIds = dto.GenreIds.Distinct().ToList();
+            var createBookCommand = new CreateBookCommand(dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
-            var genres = await _context.Genres
-                .Where(g => genreIds.Contains(g.Id))
-                .ToListAsync();
+            var response = await _bookService.CreateBookAsync(createBookCommand);
 
-            if (genres.Count != genreIds.Count)
+            if (!response.IsSuccess)
             {
-                return BadRequest("One or more genre IDs are invalid.");
+                return BadRequest(response.ErrorMessage);
             }
 
-                var book = new Book
-            {
-                Title = dto.Title,
-                Description = dto.Description,
-                Isbn = dto.Isbn,
-                PublishedDate = dto.PublishedDate,
-                Genres = genres
-            };
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
+            var createdBook = response.Book!;
+
             var bookDto = new BookDto
             {
-                Id = book.Id,
-                Title = book.Title,
-                Description = book.Description,
-                Isbn = book.Isbn,
-                PublishedDate = book.PublishedDate,
-                Genres = genres
+                Id = createdBook.Id,
+                Title = createdBook.Title,
+                Description = createdBook.Description,
+                Isbn = createdBook.Isbn,
+                PublishedDate = createdBook.PublishedDate,
+                Genres = createdBook.Genres
                     .OrderBy(g => g.Name)
-                .Select(g => new GenreDto
-                {
-                    Id = g.Id,
-                    Name = g.Name
-                })
-                .ToList()
+                    .Select(g => new GenreDto
+                    {
+                        Id = g.Id,
+                        Name = g.Name
+                    })
+                    .ToList()
             };
-            return CreatedAtAction(nameof(GetById), new { id = book.Id }, bookDto);
+
+            return CreatedAtAction(nameof(GetById), new { id = bookDto.Id }, bookDto);
+
         }
+
+
 
 
     }

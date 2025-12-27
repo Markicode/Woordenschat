@@ -1,4 +1,5 @@
 
+using Application.Services.Books;
 using Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,8 @@ builder.Services.AddDbContext<LibraryContext>(options =>
         )
     )
 );
+
+builder.Services.AddScoped<IBookService, BookService>();
 
 var app = builder.Build();
 

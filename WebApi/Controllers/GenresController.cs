@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Data;
 using Microsoft.EntityFrameworkCore;
-using WebApi.Dtos;
+using Application.Dtos;
 
 namespace WebApi.Controllers
 {

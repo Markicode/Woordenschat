@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit;
-using WebApi.Dtos;
+using Application.Dtos;
 
 namespace WebApi.Tests.Controllers
 {

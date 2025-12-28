@@ -1,4 +1,4 @@
-﻿namespace WebApi.Dtos
+﻿namespace Application.Dtos
 {
     public class GenreDto
     {

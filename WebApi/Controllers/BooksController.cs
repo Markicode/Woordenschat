@@ -2,7 +2,7 @@
 using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using WebApi.Dtos;
+using Application.Dtos;
 using Application.Services.Books;
 
 namespace WebApi.Controllers
@@ -12,21 +12,20 @@ namespace WebApi.Controllers
 
     public class BooksController : ControllerBase
     {
-        private readonly LibraryContext _context;
         private readonly IBookService _bookService;
 
         public BooksController(LibraryContext context, IBookService bookService)
         {
-            _context = context;
             _bookService = bookService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var books = await _context.Books
-                .AsNoTracking()
-                .OrderBy(b => b.Title)
+            var response = await _bookService.GetBooksAsync();
+            var books = response.Books!;
+
+            var bookDtos = books
                 .Select(b => new BookDto
                 {
                     Id = b.Id,
@@ -41,48 +40,71 @@ namespace WebApi.Controllers
                             Id = g.Id,
                             Name = g.Name
                         })
+                        .ToList(),
+                    Authors = b.Authors
+                        .OrderBy(a => a.LastName)
+                        .ThenBy(a => a.FirstName)
+                        .Select(a => new AuthorDto
+                        {
+                            Id = a.Id,
+                            FirstName = a.FirstName,
+                            LastName = a.LastName
+                        })
                         .ToList()
 
                 })
-                .ToListAsync();
+                .ToList();
 
-            return Ok(books);
+            return Ok(bookDtos);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<BookDto>> GetById(int id)
         {
-            var book = await _context.Books
-                .AsNoTracking()
-                .Where(b => b.Id == id)
-                .Select(b => new BookDto
-                {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Description = b.Description,
-                    Isbn = b.Isbn,
-                    PublishedDate = b.PublishedDate,
-                    Genres = b.Genres
-                        .OrderBy(g => g.Name)
-                        .Select(g => new GenreDto
-                        {
-                            Id = g.Id,
-                            Name = g.Name
-                        })
-                        .ToList()
-                })
-                .FirstOrDefaultAsync();
+            var response = await _bookService.GetBookByIdAsync(id);
 
-            if (book == null)
+            if (!response.IsSuccess)
             {
-                return NotFound();
+                return NotFound(response.ErrorMessage);
             }
+
+            var requestedBook = response.Book!;
+
+            var book = new BookDto
+            {
+                Id = requestedBook.Id,
+                Title = requestedBook.Title,
+                Description = requestedBook.Description,
+                Isbn = requestedBook.Isbn,
+                PublishedDate = requestedBook.PublishedDate,
+                Genres = requestedBook.Genres
+                    .OrderBy(g => g.Name)
+                    .Select(g => new GenreDto
+                    {
+                        Id = g.Id,
+                        Name = g.Name
+                    })
+                    .ToList(),
+                Authors = requestedBook.Authors
+                    .OrderBy(a => a.LastName)
+                    .ThenBy(a => a.FirstName)
+                    .Select(a => new AuthorDto
+                    {
+                        Id = a.Id,
+                        FirstName = a.FirstName,
+                        LastName = a.LastName
+                    })
+                    .ToList()
+            };
+
             return Ok(book);
+
         }
 
         [HttpPost]
         public async Task<ActionResult<BookDto>> Post(CreateBookDto dto)
         {
+            // TODO: Validate DTO (e.g., check for required fields, valid author and genre IDs, etc.)
             var createBookCommand = new CreateBookCommand(dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
             var response = await _bookService.CreateBookAsync(createBookCommand);
@@ -107,6 +129,16 @@ namespace WebApi.Controllers
                     {
                         Id = g.Id,
                         Name = g.Name
+                    })
+                    .ToList(),
+                Authors = createdBook.Authors
+                    .OrderBy(a => a.LastName)
+                    .ThenBy(a => a.FirstName)
+                    .Select(a => new AuthorDto
+                    {
+                        Id = a.Id,
+                        FirstName = a.FirstName,
+                        LastName = a.LastName
                     })
                     .ToList()
             };

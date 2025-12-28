@@ -15,6 +15,7 @@ namespace Domain.Entities
         public string? Bio { get; set; } 
         public DateTime? BirthDate { get; set; }
 
-        public List<BookAuthor> BookAuthors { get; set; } = new();
+        public List<Book> Books { get; set; } = new();
+
     }
 }

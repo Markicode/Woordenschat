@@ -14,9 +14,9 @@ namespace Domain.Entities
         public string? Description { get; set; }
         public DateTime? PublishedDate { get; set; }
 
-        public List<BookAuthor> BookAuthors { get; set; } = new();
         public List<BookCopy> BookCopies { get; set; } = new();
-
+            
+        public List<Author> Authors { get; set; } = new();
         public List<Genre> Genres { get; set; } = new();
         public List<Reservation> Reservations { get; set; } = new();
     }

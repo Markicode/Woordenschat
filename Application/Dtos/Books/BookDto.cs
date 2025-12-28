@@ -1,5 +1,5 @@
 ﻿
-namespace WebApi.Dtos
+namespace Application.Dtos
 {
 
     public class BookDto
@@ -10,6 +10,7 @@ namespace WebApi.Dtos
         public string? Isbn { get; set; }
         public DateTime? PublishedDate { get; set; }
         public List<GenreDto> Genres { get; set; } = new();
+        public List<AuthorDto> Authors { get; set; } = new();
 
     }
 }

@@ -31,6 +31,24 @@ namespace Data.Configurations
                 .HasIndex(b => b.Isbn)
                 .IsUnique();
 
+            builder
+                .HasMany(b => b.Authors)
+                .WithMany(a => a.Books)
+                .UsingEntity<BookAuthor>(  
+                    j => j
+                        .HasOne(ba => ba.Author)
+                        .WithMany()
+                        .HasForeignKey(ba => ba.AuthorId),
+                    j => j
+                        .HasOne(ba => ba.Book)
+                        .WithMany()
+                        .HasForeignKey(ba => ba.BookId),
+                    j =>
+                    {
+                        j.HasKey(ba => new { ba.BookId, ba.AuthorId });
+                        j.ToTable("BookAuthors");
+                    }
+                );
         }
 
     }

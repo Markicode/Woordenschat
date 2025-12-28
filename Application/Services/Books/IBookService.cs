@@ -9,5 +9,9 @@ namespace Application.Services.Books
     public interface IBookService
     {
         Task<CreateBookResult> CreateBookAsync(CreateBookCommand command);
+
+        Task<GetBooksResult> GetBooksAsync();
+
+        Task<GetBookByIdResult> GetBookByIdAsync(int bookId);
     }
 }

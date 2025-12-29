@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Xunit;
 using Application.Dtos;
+using Application.Dtos.Genres;
 
 namespace WebApi.Tests.Controllers
 {
@@ -36,7 +37,7 @@ namespace WebApi.Tests.Controllers
 
             response.EnsureSuccessStatusCode();
 
-            var genres = await response.Content.ReadFromJsonAsync<List<GenreDto>>();
+            var genres = await response.Content.ReadFromJsonAsync<List<GenreWithParentDto>>();
 
             Assert.NotNull(genres);
             Assert.NotEmpty(genres);
@@ -65,7 +66,7 @@ namespace WebApi.Tests.Controllers
 
             response.EnsureSuccessStatusCode();
 
-            var genre = await response.Content.ReadFromJsonAsync<GenreDto>();
+            var genre = await response.Content.ReadFromJsonAsync<GenreWithParentDto>();
 
             Assert.NotNull(genre);
 
@@ -87,7 +88,7 @@ namespace WebApi.Tests.Controllers
             var response = await _client.GetAsync("api/genres");
             response.EnsureSuccessStatusCode();
             
-            var genres = await response.Content.ReadFromJsonAsync<List<GenreDto>>();
+            var genres = await response.Content.ReadFromJsonAsync<List<GenreWithParentDto>>();
             Assert.All(genres!, genre =>
             {
                 if (genre.ParentGenreId.HasValue)

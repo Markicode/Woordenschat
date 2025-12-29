@@ -4,6 +4,7 @@ using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Application.Dtos;
 using Application.Services.Books;
+using Application.Mappings;
 
 namespace WebApi.Controllers
 {
@@ -14,45 +15,19 @@ namespace WebApi.Controllers
     {
         private readonly IBookService _bookService;
 
-        public BooksController(LibraryContext context, IBookService bookService)
+        public BooksController(IBookService bookService)
         {
             _bookService = bookService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<ActionResult<List<BookDto>>> Get()
         {
             var response = await _bookService.GetBooksAsync();
             var books = response.Books!;
 
             var bookDtos = books
-                .Select(b => new BookDto
-                {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Description = b.Description,
-                    Isbn = b.Isbn,
-                    PublishedDate = b.PublishedDate,
-                    Genres = b.Genres
-                        .OrderBy(g => g.Name)
-                        .Select(g => new GenreDto
-                        {
-                            Id = g.Id,
-                            Name = g.Name
-                        })
-                        .ToList(),
-                    Authors = b.Authors
-                        .OrderBy(a => a.LastName)
-                        .ThenBy(a => a.FirstName)
-                        .Select(a => new AuthorDto
-                        {
-                            Id = a.Id,
-                            FirstName = a.FirstName,
-                            LastName = a.LastName
-                        })
-                        .ToList()
-
-                })
+                .Select(b => b.ToDto())
                 .ToList();
 
             return Ok(bookDtos);
@@ -70,34 +45,7 @@ namespace WebApi.Controllers
 
             var requestedBook = response.Book!;
 
-            var book = new BookDto
-            {
-                Id = requestedBook.Id,
-                Title = requestedBook.Title,
-                Description = requestedBook.Description,
-                Isbn = requestedBook.Isbn,
-                PublishedDate = requestedBook.PublishedDate,
-                Genres = requestedBook.Genres
-                    .OrderBy(g => g.Name)
-                    .Select(g => new GenreDto
-                    {
-                        Id = g.Id,
-                        Name = g.Name
-                    })
-                    .ToList(),
-                Authors = requestedBook.Authors
-                    .OrderBy(a => a.LastName)
-                    .ThenBy(a => a.FirstName)
-                    .Select(a => new AuthorDto
-                    {
-                        Id = a.Id,
-                        FirstName = a.FirstName,
-                        LastName = a.LastName
-                    })
-                    .ToList()
-            };
-
-            return Ok(book);
+            return Ok(requestedBook.ToDto());
 
         }
 
@@ -116,32 +64,7 @@ namespace WebApi.Controllers
 
             var createdBook = response.Book!;
 
-            var bookDto = new BookDto
-            {
-                Id = createdBook.Id,
-                Title = createdBook.Title,
-                Description = createdBook.Description,
-                Isbn = createdBook.Isbn,
-                PublishedDate = createdBook.PublishedDate,
-                Genres = createdBook.Genres
-                    .OrderBy(g => g.Name)
-                    .Select(g => new GenreDto
-                    {
-                        Id = g.Id,
-                        Name = g.Name
-                    })
-                    .ToList(),
-                Authors = createdBook.Authors
-                    .OrderBy(a => a.LastName)
-                    .ThenBy(a => a.FirstName)
-                    .Select(a => new AuthorDto
-                    {
-                        Id = a.Id,
-                        FirstName = a.FirstName,
-                        LastName = a.LastName
-                    })
-                    .ToList()
-            };
+            var bookDto = createdBook.ToDto();
 
             return CreatedAtAction(nameof(GetById), new { id = bookDto.Id }, bookDto);
 

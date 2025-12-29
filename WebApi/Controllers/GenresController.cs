@@ -2,6 +2,10 @@
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Application.Dtos;
+using Application.Mappings;
+using Application.Services;
+using Application.Services.Genres;
+using Application.Dtos.Genres;
 
 namespace WebApi.Controllers
 {
@@ -10,49 +14,38 @@ namespace WebApi.Controllers
 
     public class GenresController : ControllerBase
     {
-        private readonly LibraryContext _context;
+        private readonly IGenreService _genreService;
 
-        public GenresController(LibraryContext context)
+        public GenresController(IGenreService genreService)
         {
-            _context = context;
+            _genreService = genreService;
         }
 
         // GET api/genres
         [HttpGet]
-        public IActionResult Get()
+        public async Task<ActionResult<List<GenreWithParentDto>>> Get()
         {
-            var genres = _context.Genres
-                .AsNoTracking()
-                .OrderBy(g => g.Name)
-                .Select(g => new GenreDto  
-                {
-                    Id = g.Id,
-                    Name = g.Name,
-                    ParentGenreId = g.ParentGenreId
-                })
+            var response = await _genreService.GetGenresAsync();
+
+            var genres = response.Genres!
+                .Select(g => g.ToWithParentDto())
                 .ToList();
+
             return Ok(genres);
         }
 
         // GET api/genres/{id}
         [HttpGet("{id}")]
-        public ActionResult<GenreDto> GetById(int id)
+        public async Task<ActionResult<GenreWithParentDto>> GetById(int id)
         {
-            var genre = _context.Genres
-                .AsNoTracking()
-                .Where(g => g.Id == id)
-                .Select(g => new GenreDto
-                {
-                    Id = g.Id,
-                    Name = g.Name,
-                    ParentGenreId = g.ParentGenreId
-                })
-                .FirstOrDefault();
-            if (genre == null)
+            var response =  await _genreService.GetGenreByIdAsync(id);
+
+            if(!response.IsSuccess)
             {
-                return NotFound();
+                return NotFound(response.ErrorMessage);
             }
-            return Ok(genre);
+ 
+            return Ok(response.Genre!.ToWithParentDto());
         }
     }
 }

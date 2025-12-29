@@ -1,9 +1,9 @@
 ﻿# Library Management API
 
 A RESTful Web API for managing a library system.
-This project is built as a learning-focused backend application using ASP.NET Core and Entity Framework Core.
+This project is built as a learning-focused backend application using ASP.NET Core and Entity Framework Core, with a strong emphasis on clean architecture, separation of concerns, and testability.
 
-The API supports managing books with multiple genres, including hierarchical genres, and follows clean API design principles such as DTO usage and separation of concerns.
+The API supports managing books with multiple genres, including hierarchical genres.
 
 ---
 
@@ -12,10 +12,12 @@ The API supports managing books with multiple genres, including hierarchical gen
 - CRUD operations for books
 - Books can belong to multiple genres (many-to-many)
 - Hierarchical genre structure (parent / sub-genres)
-- RESTful API design
+- Clean, RESTful API design
 - DTO-based input and output models
+- Explicit mapping between domain models and DTOs
 - Async data access with Entity Framework Core
 - Swagger / OpenAPI documentation
+- Automated integration tests
 
 ---
 
@@ -32,32 +34,74 @@ The API supports managing books with multiple genres, including hierarchical gen
 
 ## Project Structure
 
-```Library.sln
-├── Domain
-│ └── Entities (Book, Genre, User, etc.)
+```
+Library.sln
+├── Application
+│   ├── Dtos
+│   │   ├── Authors
+│   │   ├── Books
+│   │   └── Genres
+│   ├── Mappings
+│   └── Services
+│
 ├── Data
-│ ├── DbContext
-│ ├── Entity Configurations
-│ ├── Migrations
-│ └── Seed Data
+│   ├── Configurations
+│   ├── Migrations
+│   ├── Seed
+│   └── LibraryContext.cs
+│
+├── Domain
+│   ├── Entities
+│   ├── Enums
+│   └── Interfaces
+│
 ├── WebApi
-│ ├── Controllers
-│ ├── DTOs
-│ └── API configuration
+│   ├── Controllers
+│   ├── Properties
+│   ├── Program.cs
+│   └── appsettings.json
+│
 └── WebApi.Tests
     ├── Controllers
-    │   ├── BooksControllerTests
-    │   └── GenresControllerTests
-    └── ApiFactory (test host configuration)
+    └── ApiFactory.cs
 ```
 
 ---
 
-### Architectural Notes
-- **Domain** contains core business entities
-- **Data** handles persistence and EF Core configuration
-- **WebApi** exposes HTTP endpoints and DTOs
-- DTOs are used to separate internal models from API contracts
+## Architectural Overview
+
+This project follows a layered architecture inspired by **Clean Architecture** principles.
+
+### Layers
+
+#### Domain
+- Contains core business entities, enums, and interfaces
+- Has no dependencies on other layers
+- Represents the core business model
+
+#### Application
+- Contains application services (use cases)
+- Defines DTOs used for input and output
+- Contains explicit mapping logic between domain entities and DTOs
+- Orchestrates business operations without knowledge of HTTP or persistence details
+
+#### Data
+- Handles persistence concerns
+- Contains the EF Core `DbContext`, entity configurations, migrations, and seed data
+- Implements repository and data access logic
+
+#### WebApi
+- Acts as the delivery layer
+- Exposes HTTP endpoints via controllers
+- Handles request/response concerns only
+- Delegates all business logic to the Application layer
+
+### DTO Usage
+
+DTOs are used to:
+- Decouple internal domain models from external API contracts
+- Prevent overexposing domain entities
+- Enable safe refactoring of internal architecture without breaking API behavior
 
 ---
 
@@ -134,10 +178,12 @@ planned as future improvements.
 This project was created to practice and demonstrate:
 
 - Clean API design 
+- Layered / Clean Architecture principles
 - Entity Framework Core relationships
 - DTO mapping strategies
 - Asynchronous programming in ASP.NET Core
 - Database migrations and seeding
+- Refactoring for separation of concerns
 - Writing maintainable and testable code
 
 ---
@@ -147,6 +193,7 @@ This project was created to practice and demonstrate:
 - Add user authentication and authorization
 - Implement pagination and filtering for book listings
 - Improved validation and error handling
+- Additional API endpoints (update / delete)
 - Frontend applications to consume the API
 - CI pipeline
 - Expanded integration test coverage (edge cases, error scenarios)

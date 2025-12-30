@@ -24,7 +24,7 @@ namespace WebApi.Controllers
         public async Task<ActionResult<List<BookDto>>> Get()
         {
             var response = await _bookService.GetBooksAsync();
-            var books = response.Books!;
+            var books = response.Value!;
 
             var bookDtos = books
                 .Select(b => b.ToDto())
@@ -43,7 +43,7 @@ namespace WebApi.Controllers
                 return NotFound(response.ErrorMessage);
             }
 
-            var requestedBook = response.Book!;
+            var requestedBook = response.Value!;
 
             return Ok(requestedBook.ToDto());
 
@@ -62,7 +62,7 @@ namespace WebApi.Controllers
                 return BadRequest(response.ErrorMessage);
             }
 
-            var createdBook = response.Book!;
+            var createdBook = response.Value!;
 
             var bookDto = createdBook.ToDto();
 

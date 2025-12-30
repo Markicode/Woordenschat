@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Application;
+using Application.Common;
 
 namespace Application.Services.Genres
 {
@@ -18,20 +20,20 @@ namespace Application.Services.Genres
             _context = context;
         }
 
-        public async Task<GetGenresResult> GetGenresAsync()
+        public async Task<Result<List<Genre>>> GetGenresAsync()
         {
             var genres = await _context.Genres.ToListAsync();
-            return GetGenresResult.Success(genres);
+            return Result<List<Genre>>.Success(genres);
         }
 
-        public async Task<GetGenreByIdResult> GetGenreByIdAsync(int id)
+        public async Task<Result<Genre>> GetGenreByIdAsync(int id)
         {
             var genre = await _context.Genres.FindAsync(id);
             if (genre == null)
             {
-                return GetGenreByIdResult.Failure("Genre not found.");
+                return Result<Genre>.Failure("Genre not found.");
             }
-            return GetGenreByIdResult.Success(genre);
+            return Result<Genre>.Success(genre);
         }
     }
 }

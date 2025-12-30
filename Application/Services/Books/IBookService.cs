@@ -1,17 +1,19 @@
-﻿using System;
+﻿using Application.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Entities;
 
 namespace Application.Services.Books
 {
     public interface IBookService
     {
-        Task<CreateBookResult> CreateBookAsync(CreateBookCommand command);
+        Task<Result<Book>> CreateBookAsync(CreateBookCommand command);
 
-        Task<GetBooksResult> GetBooksAsync();
+        Task<Result<List<Book>>> GetBooksAsync();
 
-        Task<GetBookByIdResult> GetBookByIdAsync(int bookId);
+        Task<Result<Book>> GetBookByIdAsync(int bookId);
     }
 }

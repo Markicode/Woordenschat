@@ -27,7 +27,7 @@ namespace WebApi.Controllers
         {
             var response = await _genreService.GetGenresAsync();
 
-            var genres = response.Genres!
+            var genres = response.Value!
                 .Select(g => g.ToWithParentDto())
                 .ToList();
 
@@ -45,7 +45,7 @@ namespace WebApi.Controllers
                 return NotFound(response.ErrorMessage);
             }
  
-            return Ok(response.Genre!.ToWithParentDto());
+            return Ok(response.Value!.ToWithParentDto());
         }
     }
 }

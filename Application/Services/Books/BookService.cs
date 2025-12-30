@@ -1,4 +1,5 @@
-﻿using Data;
+﻿using Application.Common;
+using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,7 @@ namespace Application.Services.Books
             _context = context;
         }
 
-        public async Task<GetBooksResult> GetBooksAsync()
+        public async Task<Result<List<Book>>> GetBooksAsync()
         {
 
             var books = await _context.Books
@@ -21,10 +22,10 @@ namespace Application.Services.Books
                 .Include(b => b.Genres)
                 .ToListAsync();
 
-            return GetBooksResult.Success(books);
+            return Result<List<Book>>.Success(books);
         }
 
-        public async Task<GetBookByIdResult> GetBookByIdAsync(int id)
+        public async Task<Result<Book>> GetBookByIdAsync(int id)
         {
             var book = await _context.Books
                 .Include(b => b.Authors)
@@ -33,13 +34,13 @@ namespace Application.Services.Books
 
             if (book == null)
             {
-                return GetBookByIdResult.Failure("Book not found.");
+                return Result<Book>.Failure("Book not found.");
             }
-            return GetBookByIdResult.Success(book);
+            return Result<Book>.Success(book);
         }
 
 
-        public async Task<CreateBookResult> CreateBookAsync(CreateBookCommand command)
+        public async Task<Result<Book>> CreateBookAsync(CreateBookCommand command)
         {
             var genreIds = command.GenreIds.Distinct().ToList();
             var authorIds = command.AuthorIds.Distinct().ToList();
@@ -54,12 +55,12 @@ namespace Application.Services.Books
 
             if(authors.Count != authorIds.Count)
             {
-                return CreateBookResult.Failure("One or more author IDs are invalid.");
+                return Result<Book>.Failure("One or more author IDs are invalid.");
             }
 
             if (genres.Count != genreIds.Count)
             {
-                return CreateBookResult.Failure("One or more genre IDs are invalid.");
+                return Result<Book>.Failure("One or more genre IDs are invalid.");
             }
 
             var book = new Book
@@ -73,7 +74,7 @@ namespace Application.Services.Books
             };
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
-            return CreateBookResult.Success(book);
+            return Result<Book>.Success(book);
 
            
         }

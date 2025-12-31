@@ -15,5 +15,7 @@ namespace Application.Services.Books
         Task<Result<List<Book>>> GetBooksAsync();
 
         Task<Result<Book>> GetBookByIdAsync(int bookId);
+
+        Task<Result<Book>> ReplaceBookAsync(ReplaceBookCommand replaceBookCommand);
     }
 }

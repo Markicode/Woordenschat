@@ -70,15 +70,23 @@ namespace WebApi.Controllers
 
         }
 
-        /**
+        
         [HttpPut("{id}")]
         public async Task<ActionResult<BookDto>> Put(int id, ReplaceBookDto dto)
         {
-            var ReplaceBookCommand = new ReplaceBookCommand(dto.BookId, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
+            var replaceBookCommand = new ReplaceBookCommand(id, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
+
+            var response = await _bookService.ReplaceBookAsync(replaceBookCommand);
+
+            if (!response.IsSuccess)
+            {
+                // TODO: Differentiate between NotFound and BadRequest based on error message or error type
+                return BadRequest(response.ErrorMessage);
+            }
+            
+            return Ok(response.Value!.ToDto());
 
 
-
-
-        }**/
+        }
     }
 }

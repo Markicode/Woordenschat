@@ -37,10 +37,8 @@ The API supports managing books with multiple genres, including hierarchical gen
 ```
 Library.sln
 ├── Application
+│   ├── Common
 │   ├── Dtos
-│   │   ├── Authors
-│   │   ├── Books
-│   │   └── Genres
 │   ├── Mappings
 │   └── Services
 │
@@ -58,6 +56,7 @@ Library.sln
 ├── WebApi
 │   ├── Controllers
 │   ├── Properties
+│   ├── Json
 │   ├── Program.cs
 │   └── appsettings.json
 │
@@ -112,6 +111,7 @@ DTOs are used to:
 | GET    | /api/books          | Get all books              |
 | GET    | /api/books/{id}     | Get a book by ID           |
 | POST   | /api/books          | Create a new book          |
+| PUT    | /api/books/{id}     | Update an existing book    |
 | GET    | /api/genres         | Get all genres             |
 
 Full API documentation is available via **Swagger** when running the project.
@@ -193,7 +193,7 @@ This project was created to practice and demonstrate:
 - Add user authentication and authorization
 - Implement pagination and filtering for book listings
 - Improved validation and error handling
-- Additional API endpoints (update / delete)
+- Additional API endpoints (patch / delete)
 - Frontend applications to consume the API
 - CI pipeline
 - Expanded integration test coverage (edge cases, error scenarios)

@@ -2,6 +2,7 @@
 using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Application.Services.Books
 {
@@ -40,10 +41,10 @@ namespace Application.Services.Books
         }
 
 
-        public async Task<Result<Book>> CreateBookAsync(CreateBookCommand command)
+        public async Task<Result<Book>> CreateBookAsync(CreateBookCommand createBookCommand)
         {
-            var genreIds = command.GenreIds.Distinct().ToList();
-            var authorIds = command.AuthorIds.Distinct().ToList();
+            var genreIds = createBookCommand.GenreIds.Distinct().ToList();
+            var authorIds = createBookCommand.AuthorIds.Distinct().ToList();
 
             var genres = await _context.Genres
             .Where(g => genreIds.Contains(g.Id))
@@ -65,10 +66,10 @@ namespace Application.Services.Books
 
             var book = new Book
             {
-                Title = command.Title,
-                Description = command.Description,
-                Isbn = command.Isbn,
-                PublishedDate = command.PublishedDate,
+                Title = createBookCommand.Title,
+                Description = createBookCommand.Description,
+                Isbn = createBookCommand.Isbn,
+                PublishedDate = createBookCommand.PublishedDate,
                 Genres = genres,
                 Authors = authors
             };
@@ -77,6 +78,58 @@ namespace Application.Services.Books
             return Result<Book>.Success(book);
 
            
+        }
+
+        public async Task<Result<Book>> ReplaceBookAsync(ReplaceBookCommand replaceBookCommand)
+        {
+            var genreIds = replaceBookCommand.GenreIds.Distinct().ToList();
+            var authorIds = replaceBookCommand.AuthorIds.Distinct().ToList();
+
+            var genres = await _context.Genres
+            .Where(g => genreIds.Contains(g.Id))
+            .ToListAsync();
+
+            var authors = await _context.Authors
+                .Where(a => authorIds.Contains(a.Id))
+                .ToListAsync();
+
+            if (authors.Count != authorIds.Count)
+            {
+                return Result<Book>.Failure("One or more author IDs are invalid.");
+            }
+
+            if (genres.Count != genreIds.Count)
+            {
+                return Result<Book>.Failure("One or more genre IDs are invalid.");
+            }
+
+            var book = await _context.Books
+                .Include(b => b.Authors)
+                .Include(b => b.Genres)
+                .FirstOrDefaultAsync(b => b.Id == replaceBookCommand.BookId);
+
+            if (book == null)
+            {
+                return Result<Book>.Failure("Book not found.");
+            }
+
+            book.Title = replaceBookCommand.Title;
+            book.Isbn = replaceBookCommand.Isbn;
+            book.Description = replaceBookCommand.Description;
+            book.PublishedDate = replaceBookCommand.PublishedDate;
+
+            // Replace relations
+            book.Authors.Clear();
+            foreach (var author in authors)
+                book.Authors.Add(author);
+
+            book.Genres.Clear();
+            foreach (var genre in genres)
+                book.Genres.Add(genre);
+
+            await _context.SaveChangesAsync();
+
+            return Result<Book>.Success(book);
         }
     }
     

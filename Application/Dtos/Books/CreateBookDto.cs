@@ -6,7 +6,7 @@ namespace Application.Dtos
         public string Title { get; set; } = string.Empty;
         public string? Isbn { get; set; }
         public string? Description { get; set; }
-        public DateTime? PublishedDate { get; set; }
+        public DateOnly PublishedDate { get; set; }
         public List<int> AuthorIds { get; set; } = new();
         public List<int> GenreIds { get; set; } = new();
 

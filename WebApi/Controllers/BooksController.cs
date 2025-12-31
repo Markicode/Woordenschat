@@ -70,8 +70,15 @@ namespace WebApi.Controllers
 
         }
 
+        /**
+        [HttpPut("{id}")]
+        public async Task<ActionResult<BookDto>> Put(int id, ReplaceBookDto dto)
+        {
+            var ReplaceBookCommand = new ReplaceBookCommand(dto.BookId, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
 
 
+
+        }**/
     }
 }

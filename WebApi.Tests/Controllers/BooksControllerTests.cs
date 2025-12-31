@@ -24,6 +24,10 @@ namespace WebApi.Tests.Controllers
         {
             // Act
             var response = await _client.GetAsync("/api/books");
+
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(content);
+
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -48,7 +52,9 @@ namespace WebApi.Tests.Controllers
             var dto = new
             {
                 title = "Test Book",
-                genreIds = new[] { 24 }
+                publishedDate = new DateOnly(2023, 1, 1),
+                genreIds = new[] { 24 },
+                authorIds = new[] { 1 }
             };
 
             var response = await _client.PostAsJsonAsync("/api/books", dto);

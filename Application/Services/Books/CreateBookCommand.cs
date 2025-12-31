@@ -11,11 +11,11 @@ namespace Application.Services.Books
         public string? Isbn { get; set; }
         public string Title { get; set; }
         public string? Description { get; set; }
-        public DateTime? PublishedDate { get; set; }
+        public DateOnly PublishedDate { get; set; }
         public List<int> AuthorIds { get; set; } = new();
         public List<int> GenreIds { get; set; } = new();
 
-        public CreateBookCommand(string? isbn, string title, string? description, DateTime? publishedDate, List<int> authorIds, List<int> genreIds)
+        public CreateBookCommand(string? isbn, string title, string? description, DateOnly publishedDate, List<int> authorIds, List<int> genreIds)
         {
             Isbn = isbn;
             Title = title;

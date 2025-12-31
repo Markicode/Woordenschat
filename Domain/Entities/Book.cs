@@ -12,7 +12,7 @@ namespace Domain.Entities
         public string? Isbn { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public DateTime? PublishedDate { get; set; }
+        public DateOnly PublishedDate { get; set; }
 
         public List<BookCopy> BookCopies { get; set; } = new();
             

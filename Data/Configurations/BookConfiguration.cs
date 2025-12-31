@@ -31,6 +31,13 @@ namespace Data.Configurations
                 .HasIndex(b => b.Isbn)
                 .IsUnique();
 
+            builder.Property(b => b.PublishedDate)
+                .HasConversion(
+                    v => v.ToDateTime(TimeOnly.MinValue),
+                    v => DateOnly.FromDateTime(v)
+                )
+                .HasColumnType("date");
+
             builder
                 .HasMany(b => b.Authors)
                 .WithMany(a => a.Books)

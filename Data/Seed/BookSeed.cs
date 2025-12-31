@@ -19,7 +19,7 @@ namespace Data.Seed
                     Title = "The Great Gatsby",
                     Description = "A novel written by American author F. Scott Fitzgerald.",
                     Isbn = "9780743273565",
-                    PublishedDate = new DateTime(1925, 4, 10)
+                    PublishedDate = new DateOnly(1925, 4, 10)
                 },
                 new Book
                 {
@@ -27,7 +27,7 @@ namespace Data.Seed
                     Title = "To Kill a Mockingbird",
                     Description = "A novel by Harper Lee published in 1960.",
                     Isbn = "9780061120084",
-                    PublishedDate = new DateTime(1960, 7, 11)
+                    PublishedDate = new DateOnly(1960, 7, 11)
                 },
                 new Book
                 {
@@ -35,7 +35,7 @@ namespace Data.Seed
                     Title = "1984",
                     Description = "A dystopian social science fiction novel and cautionary tale by the English writer George Orwell.",
                     Isbn = "9780451524935",
-                    PublishedDate = new DateTime(1949, 6, 8)
+                    PublishedDate = new DateOnly(1949, 6, 8)
                 },
                 new Book
                 {
@@ -43,7 +43,7 @@ namespace Data.Seed
                     Title = "Pride and Prejudice",
                     Description = "A romantic novel of manners written by Jane Austen.",
                     Isbn = "9780141439518",
-                    PublishedDate = new DateTime(1813, 1, 28)
+                    PublishedDate = new DateOnly(1813, 1, 28)
                 },
                 new Book
                 {
@@ -51,7 +51,7 @@ namespace Data.Seed
                     Title = "The Da Vinci Code",
                     Description = "A mystery thriller novel by Dan Brown.",
                     Isbn = "9780307474278",
-                    PublishedDate = new DateTime(2003, 4, 1)
+                    PublishedDate = new DateOnly(2003, 4, 1)
                 }
             );
         }

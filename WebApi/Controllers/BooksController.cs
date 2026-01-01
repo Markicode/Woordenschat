@@ -85,8 +85,19 @@ namespace WebApi.Controllers
             }
             
             return Ok(response.Value!.ToDto());
+        }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var response = await _bookService.DeleteBookAsync(id);
 
+            if (!response.IsSuccess)
+            {
+                return NotFound(response.ErrorMessage);
+            }
+
+            return NoContent();
         }
     }
 }

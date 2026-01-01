@@ -17,5 +17,7 @@ namespace Application.Services.Books
         Task<Result<Book>> GetBookByIdAsync(int bookId);
 
         Task<Result<Book>> ReplaceBookAsync(ReplaceBookCommand replaceBookCommand);
+
+        Task<Result<Unit>> DeleteBookAsync(int bookId);
     }
 }

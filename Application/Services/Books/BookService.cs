@@ -131,6 +131,18 @@ namespace Application.Services.Books
 
             return Result<Book>.Success(book);
         }
+
+        public async Task<Result<Unit>> DeleteBookAsync(int bookId)
+        {
+            var book = await _context.Books.FindAsync(bookId);
+            if (book == null)
+            {
+                return Result<Unit>.Failure("Book not found.");
+            }
+            _context.Books.Remove(book);
+            await _context.SaveChangesAsync();
+            return Result<Unit>.Success(Unit.Value);
+        }
     }
     
 }

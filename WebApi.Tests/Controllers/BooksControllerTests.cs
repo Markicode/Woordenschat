@@ -20,6 +20,8 @@ namespace WebApi.Tests.Controllers
             _client = factory.CreateClient();
         }
 
+        #region GET
+
         [Fact]
         public async Task GetBooks_ReturnsBooks()
         {
@@ -84,6 +86,10 @@ namespace WebApi.Tests.Controllers
             fetchedBook.Title.Should().Be("GetBookById Testbook");
         }
 
+        #endregion
+
+        #region POST
+
         [Fact]
         public async Task CreateBook_Returns201()
         {
@@ -104,6 +110,10 @@ namespace WebApi.Tests.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             response.Headers.Location.Should().NotBeNull();
         }
+
+        #endregion
+
+        #region PUT
 
         [Fact]
         public async Task ReplaceBook_ReturnsUpdatedBook()
@@ -168,8 +178,34 @@ namespace WebApi.Tests.Controllers
             var fetchedBook = await getResponse.Content.ReadFromJsonAsync<BookDto>();
             fetchedBook!.Title.Should().Be("Updated title");
 
-
         }
+
+        [Fact]
+        public async Task ReplaceBook_ReturnsNotFound_ForNonExistentBook()
+        {
+            // Arrange - prepare update DTO
+            var updateDto = new
+            {
+                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
+                title = "Updated title",
+                description = "Updated description",
+                publishedDate = "2021-01-01",
+                authorIds = new[] { 2 },
+                genreIds = new[] { 30 }
+            };
+            // Act - attempt to replace a non-existent book
+            var nonExistentBookId = int.MaxValue;
+            var putResponse = await _client.PutAsJsonAsync(
+                $"/api/books/{nonExistentBookId}",
+                updateDto
+            );
+            // Assert - verify NotFound is returned
+            putResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        #endregion
+
+        #region DELETE
 
         [Fact]
         public async Task DeleteBook_RemovesBookAndReturnsNoContent()
@@ -197,6 +233,140 @@ namespace WebApi.Tests.Controllers
             var getResponse = await _client.GetAsync($"/api/books/{createdBook.Id}");
             getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
+
+        [Fact]
+        public async Task DeleteBook_ReturnsNotFound_ForNonExistentBook()
+        {
+            // Arrange - use a non-existent book ID
+            var nonExistentBookId = int.MaxValue;
+            // Act - attempt to delete the non-existent book
+            var deleteResponse = await _client.DeleteAsync($"/api/books/{nonExistentBookId}");
+            // Assert - verify NotFound is returned
+            deleteResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        #endregion
+
+        #region PATCH
+
+        [Fact]
+        public async Task PatchBook_UpdatesTitle_WithoutAffectingOtherFields()
+        {
+            // Arrange - create a book first
+            var bookDto = new
+            {
+                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
+                title = "Book to be patched",
+                description = "This book will be patched in the test",
+                publishedDate = "2022-02-02",
+                genreIds = new[] { 24 },
+                authorIds = new[] { 1 }
+            };
+            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
+            createdBook.Should().NotBeNull();
+
+            var originalDescription = createdBook.Description;
+            var originalIsbn = createdBook.Isbn;
+            var originalAuthors = createdBook.Authors.Select(a => a.Id).ToList();
+            var originalGenres = createdBook.Genres.Select(g => g.Id).ToList();
+
+            // Act - patch the book's title
+            var patchBookDto = new
+            {
+                title = "Patched Book Title"
+            };
+
+            var patchResponse = await _client.PatchAsJsonAsync(
+                $"/api/books/{createdBook!.Id}",
+                patchBookDto
+            );
+
+            // Assert - verify the book's title was updated
+            patchResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            var patchedBook = await patchResponse.Content.ReadFromJsonAsync<BookDto>();
+            patchedBook!.Title.Should().Be("Patched Book Title");
+            patchedBook.Description.Should().Be(originalDescription);
+            patchedBook.Isbn.Should().Be(originalIsbn);
+            patchedBook.Authors.Select(a => a.Id).Should().BeEquivalentTo(originalAuthors);
+            patchedBook.Genres.Select(g => g.Id).Should().BeEquivalentTo(originalGenres);
+        }
+
+        [Fact]
+        public async Task PatchBook_ReturnsBadRequest_OnEmptyBody()
+        {
+            // Arrange - create a book and prepare empty patch DTO
+            var bookDto = new
+            {
+                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
+                title = "Book to be patched",
+                description = "This book will be patched in the test",
+                publishedDate = "2022-02-02",
+                genreIds = new[] { 24 },
+                authorIds = new[] { 1 }
+            };
+            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
+            createdBook.Should().NotBeNull();
+
+            var emptyDto = new { };
+
+            // Act - attempt to patch with empty body
+            var patchResponse = await _client.PatchAsJsonAsync(
+                $"/api/books/{createdBook!.Id}",
+                emptyDto
+            );
+
+            // Assert - verify BadRequest is returned
+            patchResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        }
+
+        [Fact]
+        public async Task PatchBook_ReturnsBadRequest_WhenGenreDoesNotExist()
+        {
+            // Arrange - create a book and prepare invalid patch DTO
+            var bookDto = new
+            {
+                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
+                title = "Book to be patched",
+                description = "This book will be patched in the test",
+                publishedDate = "2022-02-02",
+                genreIds = new[] { 24 },
+                authorIds = new[] { 1 }
+            };
+            
+            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
+            createdBook.Should().NotBeNull();
+
+            var originalGenreIds = createdBook!.Genres.Select(g => g.Id).ToList();
+
+            var patchDto = new
+            {
+                genreIds = new[] { int.MaxValue }
+            };
+
+            // Act - attempt to patch with non-existent genre ID
+
+            var response = await _client.PatchAsJsonAsync(
+                $"/api/books/{createdBook.Id}",
+                patchDto
+            );
+
+            // Assert - verify BadRequest is returned
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            var unpatchedBookResponse = await _client.GetAsync($"/api/books/{createdBook.Id}");
+            unpatchedBookResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            var unpatchedBook = await unpatchedBookResponse.Content.ReadFromJsonAsync<BookDto>();
+            unpatchedBook!.Genres.Select(g => g.Id).Should().BeEquivalentTo(originalGenreIds);
+
+        }
+
+        #endregion
 
     }
 }

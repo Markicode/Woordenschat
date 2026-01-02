@@ -2,8 +2,10 @@
 using Application.Services.Books;
 using Application.Services.Genres;
 using Data;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Json;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,9 @@ builder.Services.AddDbContext<LibraryContext>(options =>
     )
 );
 
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<LibraryContext>();
+
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 
@@ -44,6 +49,27 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+
+        var result = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString()
+            })
+        };
+
+        await context.Response.WriteAsJsonAsync(result);
+    }
+})
+    .ExcludeFromDescription();
 
 app.Run();
 

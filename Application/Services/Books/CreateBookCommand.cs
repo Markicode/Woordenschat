@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Application.Services.Books
 {
-    public class CreateBookCommand
+    public sealed class CreateBookCommand
     {
         public string? Isbn { get; set; }
         public string Title { get; set; }

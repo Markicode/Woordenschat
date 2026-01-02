@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Enums;
 using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +36,7 @@ namespace Application.Services.Books
 
             if (book == null)
             {
-                return Result<Book>.Failure("Book not found.");
+                return Result<Book>.Failure(ErrorType.NotFound, "Book not found.");
             }
             return Result<Book>.Success(book);
         }
@@ -56,12 +57,12 @@ namespace Application.Services.Books
 
             if(authors.Count != authorIds.Count)
             {
-                return Result<Book>.Failure("One or more author IDs are invalid.");
+                return Result<Book>.Failure(ErrorType.ValidationError, "One or more author IDs are invalid.");
             }
 
             if (genres.Count != genreIds.Count)
             {
-                return Result<Book>.Failure("One or more genre IDs are invalid.");
+                return Result<Book>.Failure(ErrorType.ValidationError, "One or more genre IDs are invalid.");
             }
 
             var book = new Book
@@ -95,12 +96,12 @@ namespace Application.Services.Books
 
             if (authors.Count != authorIds.Count)
             {
-                return Result<Book>.Failure("One or more author IDs are invalid.");
+                return Result<Book>.Failure(ErrorType.ValidationError, "One or more author IDs are invalid.");
             }
 
             if (genres.Count != genreIds.Count)
             {
-                return Result<Book>.Failure("One or more genre IDs are invalid.");
+                return Result<Book>.Failure(ErrorType.ValidationError, "One or more genre IDs are invalid.");
             }
 
             var book = await _context.Books
@@ -110,7 +111,7 @@ namespace Application.Services.Books
 
             if (book == null)
             {
-                return Result<Book>.Failure("Book not found.");
+                return Result<Book>.Failure(ErrorType.NotFound, "Book not found.");
             }
 
             book.Title = replaceBookCommand.Title;
@@ -137,11 +138,75 @@ namespace Application.Services.Books
             var book = await _context.Books.FindAsync(bookId);
             if (book == null)
             {
-                return Result<Unit>.Failure("Book not found.");
+                return Result<Unit>.Failure(ErrorType.NotFound, "Book not found.");
             }
             _context.Books.Remove(book);
             await _context.SaveChangesAsync();
             return Result<Unit>.Success(Unit.Value);
+        }
+
+        public async Task<Result<Book>> PatchBookAsync(PatchBookCommand patchBookCommand)
+        {
+            var book = await _context.Books
+                .Include(b => b.Authors)
+                .Include(b => b.Genres)
+                .FirstOrDefaultAsync(b => b.Id == patchBookCommand.BookId);
+            if (book == null)
+            {
+                return Result<Book>.Failure(ErrorType.NotFound, "Book not found.");
+            }
+            // Update only the fields that are provided
+            if (patchBookCommand.Title != null)
+                book.Title = patchBookCommand.Title;
+            if (patchBookCommand.Isbn != null)
+                book.Isbn = patchBookCommand.Isbn;
+            if (patchBookCommand.Description != null)
+                book.Description = patchBookCommand.Description;
+            if (patchBookCommand.PublishedDate.HasValue)
+                book.PublishedDate = patchBookCommand.PublishedDate.Value;
+
+            if (patchBookCommand.AuthorIds != null)
+            {
+                var authorIds = patchBookCommand.AuthorIds.Distinct().ToList();
+
+                var authors = await _context.Authors
+                    .Where(a => authorIds.Contains(a.Id))
+                    .ToListAsync();
+
+                if (authors.Count != authorIds.Count)
+                {
+                    return Result<Book>.Failure(ErrorType.ValidationError, "One or more author IDs are invalid.");
+                }
+
+                book.Authors.Clear();
+                foreach (var author in authors)
+                {
+                    book.Authors.Add(author);
+                }
+            }
+
+            if (patchBookCommand.GenreIds != null)
+            {
+                var genreIds = patchBookCommand.GenreIds.Distinct().ToList();
+
+                var genres = await _context.Genres
+                    .Where(g => genreIds.Contains(g.Id))
+                    .ToListAsync();
+
+                if (genres.Count != genreIds.Count)
+                {
+                    return Result<Book>.Failure(ErrorType.ValidationError, "One or more genre IDs are invalid.");
+                }
+
+                book.Genres.Clear();
+                foreach (var genre in genres)
+                {
+                    book.Genres.Add(genre);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Result<Book>.Success(book);
         }
     }
     

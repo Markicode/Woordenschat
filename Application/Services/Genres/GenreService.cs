@@ -8,6 +8,7 @@ using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Application;
 using Application.Common;
+using Application.Enums;
 
 namespace Application.Services.Genres
 {
@@ -31,7 +32,7 @@ namespace Application.Services.Genres
             var genre = await _context.Genres.FindAsync(id);
             if (genre == null)
             {
-                return Result<Genre>.Failure("Genre not found.");
+                return Result<Genre>.Failure(ErrorType.NotFound, "Genre not found.");
             }
             return Result<Genre>.Success(genre);
         }

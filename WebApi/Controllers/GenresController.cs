@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Data;
-using Microsoft.EntityFrameworkCore;
-using Application.Dtos;
+﻿using Application.Dtos;
+using Application.Dtos.Genres;
+using Application.Enums;
 using Application.Mappings;
 using Application.Services;
 using Application.Services.Genres;
-using Application.Dtos.Genres;
+using Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.Controllers
 {
@@ -42,7 +43,11 @@ namespace WebApi.Controllers
 
             if(!response.IsSuccess)
             {
-                return NotFound(response.ErrorMessage);
+                return response.ErrorType switch
+                {
+                    ErrorType.NotFound => NotFound(response.ErrorMessage),
+                    _ => BadRequest()
+                };
             }
  
             return Ok(response.Value!.ToWithParentDto());

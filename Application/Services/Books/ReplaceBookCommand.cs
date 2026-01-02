@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Application.Services.Books
 {
-    public class ReplaceBookCommand
+    public sealed class ReplaceBookCommand
     {
         public int BookId { get; }
         public string? Isbn { get; }

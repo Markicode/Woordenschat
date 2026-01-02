@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Application.Dtos;
+using Application.Dtos.Books;
+using Application.Enums;
+using Application.Mappings;
+using Application.Services.Books;
 using Data;
 using Domain.Entities;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Application.Dtos;
-using Application.Services.Books;
-using Application.Mappings;
 
 namespace WebApi.Controllers
 {
@@ -59,7 +61,11 @@ namespace WebApi.Controllers
 
             if (!response.IsSuccess)
             {
-                return BadRequest(response.ErrorMessage);
+                return response.ErrorType switch
+                {
+                    ErrorType.ValidationError => BadRequest(response.ErrorMessage),
+                    _ => BadRequest()
+                };
             }
 
             var createdBook = response.Value!;
@@ -70,7 +76,7 @@ namespace WebApi.Controllers
 
         }
 
-        
+
         [HttpPut("{id}")]
         public async Task<ActionResult<BookDto>> Put(int id, ReplaceBookDto dto)
         {
@@ -80,10 +86,14 @@ namespace WebApi.Controllers
 
             if (!response.IsSuccess)
             {
-                // TODO: Differentiate between NotFound and BadRequest based on error message or error type
-                return BadRequest(response.ErrorMessage);
+                return response.ErrorType switch
+                {
+                    ErrorType.NotFound => NotFound(response.ErrorMessage),
+                    ErrorType.ValidationError => BadRequest(response.ErrorMessage),
+                    _ => BadRequest()
+                };
             }
-            
+
             return Ok(response.Value!.ToDto());
         }
 
@@ -94,10 +104,42 @@ namespace WebApi.Controllers
 
             if (!response.IsSuccess)
             {
-                return NotFound(response.ErrorMessage);
+                return response.ErrorType switch
+                {
+                    ErrorType.NotFound => NotFound(response.ErrorMessage),
+                    _ => BadRequest()
+                };
             }
 
             return NoContent();
         }
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<BookDto>> Patch(int id, PatchBookDto dto)
+        {
+            if (dto.Isbn is null &&
+                dto.Title is null &&
+                dto.Description is null &&
+                dto.PublishedDate is null &&
+                dto.AuthorIds is null &&
+                dto.GenreIds is null)
+            {
+                return BadRequest("No fields provided to patch.");
+            }
+
+            var patchBookCommand = new PatchBookCommand(id, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
+            var response = await _bookService.PatchBookAsync(patchBookCommand);
+            if (!response.IsSuccess)
+            {
+                return response.ErrorType switch
+                {
+                    ErrorType.NotFound => NotFound(response.ErrorMessage),
+                    ErrorType.ValidationError => BadRequest(response.ErrorMessage),
+                    _ => BadRequest()
+                };
+            }
+            return Ok(response.Value!.ToDto());
+        }
+
     }
 }

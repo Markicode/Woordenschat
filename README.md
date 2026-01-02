@@ -1,7 +1,8 @@
 ﻿# Library Management API
 
 A RESTful Web API for managing a library system.
-This project is built as a learning-focused backend application using ASP.NET Core and Entity Framework Core, with a strong emphasis on clean architecture, separation of concerns, and testability.
+This project is built as a learning-focused backend application using ASP.NET Core and Entity Framework Core, 
+with a strong emphasis on clean architecture, separation of concerns, and testability.
 
 The API supports managing books with multiple genres, including hierarchical genres.
 
@@ -9,7 +10,7 @@ The API supports managing books with multiple genres, including hierarchical gen
 
 ## Features
 
-- CRUD operations for books
+- Full CRUD operations for books (GET, POST, PUT, PATCH, DELETE)
 - Books can belong to multiple genres (many-to-many)
 - Hierarchical genre structure (parent / sub-genres)
 - Clean, RESTful API design
@@ -39,6 +40,7 @@ Library.sln
 ├── Application
 │   ├── Common
 │   ├── Dtos
+│   ├── Enums
 │   ├── Mappings
 │   └── Services
 │
@@ -106,13 +108,15 @@ DTOs are used to:
 
 ## API Overview
 
-| Method | Endpoint            | Description                |
-|--------|---------------------|----------------------------|
-| GET    | /api/books          | Get all books              |
-| GET    | /api/books/{id}     | Get a book by ID           |
-| POST   | /api/books          | Create a new book          |
-| PUT    | /api/books/{id}     | Update an existing book    |
-| GET    | /api/genres         | Get all genres             |
+| Method | Endpoint            | Description                         |
+|--------|---------------------|-------------------------------------|
+| GET    | /api/books          | Get all books                       |
+| GET    | /api/books/{id}     | Get a book by ID                    |
+| POST   | /api/books          | Create a new book                   |
+| PUT    | /api/books/{id}     | Replace an existing book            |
+| PATCH  | /api/books/{id}     | Partially update an existing book   |
+| DELETE | /api/books/{id}     | Update an existing book             |
+| GET    | /api/genres         | Get all genres                      |
 
 Full API documentation is available via **Swagger** when running the project.
 
@@ -150,9 +154,9 @@ https://localhost:<port>/swagger
 
 This project includes automated integration tests using **xUnit**.
 
-The tests run against the API using an in-memory test server
-(`WebApplicationFactory`), exercising the full HTTP request pipeline
-including routing, controllers, dependency injection, and Entity Framework Core.
+The tests run against the API using a test host (`WebApplicationFactory`),
+exercising the full HTTP request pipeline including routing, controllers,
+dependency injection, and Entity Framework Core.
 
 Current test coverage includes:
 
@@ -193,7 +197,7 @@ This project was created to practice and demonstrate:
 - Add user authentication and authorization
 - Implement pagination and filtering for book listings
 - Improved validation and error handling
-- Additional API endpoints (patch / delete)
+- Additional API endpoints and resources
 - Frontend applications to consume the API
 - CI pipeline
 - Expanded integration test coverage (edge cases, error scenarios)

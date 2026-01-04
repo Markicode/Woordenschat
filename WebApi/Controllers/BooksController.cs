@@ -1,19 +1,17 @@
-﻿using Application.Dtos;
+﻿
+using Application.Dtos;
 using Application.Dtos.Books;
-using Application.Enums;
 using Application.Mappings;
 using Application.Services.Books;
-using Data;
-using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using WebApi.Extensions;
 
 namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/books")]
 
-    public class BooksController : ControllerBase
+    public class BooksController : BaseApiController
     {
         private readonly IBookService _bookService;
 
@@ -23,9 +21,15 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<BookDto>>> Get()
+        public async Task<IActionResult> Get()
         {
             var response = await _bookService.GetBooksAsync();
+
+            if (!response.IsSuccess)
+            {
+                return response.ToActionResult(this);
+            }
+
             var books = response.Value!;
 
             var bookDtos = books
@@ -36,13 +40,13 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<BookDto>> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
             var response = await _bookService.GetBookByIdAsync(id);
 
             if (!response.IsSuccess)
             {
-                return NotFound(response.ErrorMessage);
+                return response.ToActionResult(this);
             }
 
             var requestedBook = response.Value!;
@@ -52,7 +56,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<BookDto>> Post(CreateBookDto dto)
+        public async Task<IActionResult> Post(CreateBookDto dto)
         {
             // TODO: Validate DTO (e.g., check for required fields, valid author and genre IDs, etc.)
             var createBookCommand = new CreateBookCommand(dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
@@ -61,11 +65,7 @@ namespace WebApi.Controllers
 
             if (!response.IsSuccess)
             {
-                return response.ErrorType switch
-                {
-                    ErrorType.ValidationError => BadRequest(response.ErrorMessage),
-                    _ => BadRequest()
-                };
+                return response.ToActionResult(this);
             }
 
             var createdBook = response.Value!;
@@ -78,7 +78,7 @@ namespace WebApi.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<BookDto>> Put(int id, ReplaceBookDto dto)
+        public async Task<IActionResult> Put(int id, ReplaceBookDto dto)
         {
             var replaceBookCommand = new ReplaceBookCommand(id, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
@@ -86,12 +86,7 @@ namespace WebApi.Controllers
 
             if (!response.IsSuccess)
             {
-                return response.ErrorType switch
-                {
-                    ErrorType.NotFound => NotFound(response.ErrorMessage),
-                    ErrorType.ValidationError => BadRequest(response.ErrorMessage),
-                    _ => BadRequest()
-                };
+                return response.ToActionResult(this);
             }
 
             return Ok(response.Value!.ToDto());
@@ -104,18 +99,14 @@ namespace WebApi.Controllers
 
             if (!response.IsSuccess)
             {
-                return response.ErrorType switch
-                {
-                    ErrorType.NotFound => NotFound(response.ErrorMessage),
-                    _ => BadRequest()
-                };
+                return response.ToActionResult(this);
             }
 
             return NoContent();
         }
 
         [HttpPatch("{id}")]
-        public async Task<ActionResult<BookDto>> Patch(int id, PatchBookDto dto)
+        public async Task<IActionResult> Patch(int id, PatchBookDto dto)
         {
             if (dto.Isbn is null &&
                 dto.Title is null &&
@@ -129,14 +120,10 @@ namespace WebApi.Controllers
 
             var patchBookCommand = new PatchBookCommand(id, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
             var response = await _bookService.PatchBookAsync(patchBookCommand);
+
             if (!response.IsSuccess)
             {
-                return response.ErrorType switch
-                {
-                    ErrorType.NotFound => NotFound(response.ErrorMessage),
-                    ErrorType.ValidationError => BadRequest(response.ErrorMessage),
-                    _ => BadRequest()
-                };
+                return response.ToActionResult(this);
             }
             return Ok(response.Value!.ToDto());
         }

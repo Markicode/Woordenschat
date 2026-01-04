@@ -10,7 +10,7 @@ namespace Application.Services.Books
 {
     public interface IBookService
     {
-        Task<Result<Book>> CreateBookAsync(CreateBookCommand command);
+        Task<Result<Book>> CreateBookAsync(CreateBookCommand createBookCommand);
 
         Task<Result<List<Book>>> GetBooksAsync();
 

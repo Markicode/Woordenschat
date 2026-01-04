@@ -4,8 +4,6 @@ A RESTful Web API for managing a library system.
 This project is built as a learning-focused backend application using ASP.NET Core and Entity Framework Core, 
 with a strong emphasis on clean architecture, separation of concerns, and testability.
 
-The API supports managing books with multiple genres, including hierarchical genres.
-
 ---
 
 ## Features
@@ -16,6 +14,8 @@ The API supports managing books with multiple genres, including hierarchical gen
 - Clean, RESTful API design
 - DTO-based input and output models
 - Explicit mapping between domain models and DTOs
+- Explicit Result-based error handling (no exception-driven flow)
+- Centralized controller error handling via a shared base controller
 - Async data access with Entity Framework Core
 - Swagger / OpenAPI documentation
 - Automated integration tests
@@ -57,6 +57,7 @@ Library.sln
 │
 ├── WebApi
 │   ├── Controllers
+│   ├── Extensions
 │   ├── Properties
 │   ├── Json
 │   ├── Program.cs
@@ -97,12 +98,38 @@ This project follows a layered architecture inspired by **Clean Architecture** p
 - Handles request/response concerns only
 - Delegates all business logic to the Application layer
 
+- ### Controllers
+
+Controllers are intentionally kept thin and inherit from a shared `BaseApiController`.
+
+Responsibilities:
+- Translate HTTP requests into application commands
+- Delegate all business logic to application services
+- Convert application results into HTTP responses
+
+All controllers follow a consistent pattern:
+- Call application service
+- Handle failure via centralized Result-to-HTTP mapping
+- Map successful results to DTOs
+
 ### DTO Usage
 
 DTOs are used to:
 - Decouple internal domain models from external API contracts
 - Prevent overexposing domain entities
 - Enable safe refactoring of internal architecture without breaking API behavior
+
+### Error Handling Strategy
+
+The application uses an explicit `Result` / `Result<T>` pattern to handle success and failure cases.
+
+- Application services return `Result<T>` instead of throwing exceptions for expected error scenarios
+- Errors are categorized using an `ErrorType` enum (e.g. NotFound, ValidationError, Conflict)
+- HTTP error mapping is handled centrally in the WebApi layer
+- Controllers remain thin and free of duplicated error-handling logic
+
+This approach makes control flow explicit, improves testability, and avoids exception-driven business logic.
+
 
 ---
 
@@ -115,8 +142,11 @@ DTOs are used to:
 | POST   | /api/books          | Create a new book                   |
 | PUT    | /api/books/{id}     | Replace an existing book            |
 | PATCH  | /api/books/{id}     | Partially update an existing book   |
-| DELETE | /api/books/{id}     | Update an existing book             |
+| DELETE | /api/books/{id}     | Delete an existing book             |
 | GET    | /api/genres         | Get all genres                      |
+| GET    | /api/genres/{id}    | Get a genre by ID                   |
+| GET    | /api/authors        | Get all authors                     |
+| GET    | /api/authors/{id}   | Get an author by ID                 |
 
 Full API documentation is available via **Swagger** when running the project.
 

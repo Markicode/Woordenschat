@@ -1,19 +1,15 @@
-﻿using Application.Dtos;
-using Application.Dtos.Genres;
-using Application.Enums;
+﻿
 using Application.Mappings;
-using Application.Services;
 using Application.Services.Genres;
-using Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using WebApi.Extensions;
 
 namespace WebApi.Controllers
 {
     [ApiController]
     [Route("api/genres")]
 
-    public class GenresController : ControllerBase
+    public class GenresController : BaseApiController
     {
         private readonly IGenreService _genreService;
 
@@ -24,9 +20,14 @@ namespace WebApi.Controllers
 
         // GET api/genres
         [HttpGet]
-        public async Task<ActionResult<List<GenreWithParentDto>>> Get()
+        public async Task<IActionResult> Get()
         {
             var response = await _genreService.GetGenresAsync();
+
+            if(!response.IsSuccess)
+            {
+                return response.ToActionResult(this);
+            }
 
             var genres = response.Value!
                 .Select(g => g.ToWithParentDto())
@@ -37,17 +38,13 @@ namespace WebApi.Controllers
 
         // GET api/genres/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<GenreWithParentDto>> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
             var response =  await _genreService.GetGenreByIdAsync(id);
 
             if(!response.IsSuccess)
             {
-                return response.ErrorType switch
-                {
-                    ErrorType.NotFound => NotFound(response.ErrorMessage),
-                    _ => BadRequest()
-                };
+                return response.ToActionResult(this);
             }
  
             return Ok(response.Value!.ToWithParentDto());

@@ -11,7 +11,7 @@ namespace Domain.Entities
         public int Id { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public DateTime DateOfBirth { get; set; }
+        public DateOnly DateOfBirth { get; set; }
 
         public int FamilyId { get; set; }
         public Family Family { get; set; } = null!;

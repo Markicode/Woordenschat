@@ -1,4 +1,5 @@
 
+using Application.Services.Authors;
 using Application.Services.Books;
 using Application.Services.Genres;
 using Data;
@@ -34,6 +35,7 @@ builder.Services.AddHealthChecks()
 
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
 
 var app = builder.Build();
 

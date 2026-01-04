@@ -3,19 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Entities;
 
-namespace Domain.Entities
+namespace Application.Dtos.Authors
 {
-    public class Author
+    public class AuthorWithBooksDto
     {
         public int Id { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-
-        public string? Bio { get; set; } 
+        public string? Bio { get; set; }
         public DateOnly? BirthDate { get; set; }
-
-        public List<Book> Books { get; set; } = new();
-
+        public List<BookDto> Books { get; set; } = new();
     }
 }

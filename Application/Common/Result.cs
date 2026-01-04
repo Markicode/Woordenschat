@@ -8,29 +8,27 @@ using System.Threading.Tasks;
 
 namespace Application.Common
 {
-    public class Result<T>
+    public class Result
     {
         public bool IsSuccess { get; }
-        public T? Value { get; }
         public ErrorType? ErrorType { get; }
         public string? ErrorMessage { get; }
 
-        private Result(bool isSuccess, T? value, ErrorType? errorType, string? errorMessage)
+        protected Result(bool isSuccess, ErrorType? errorType, string? errorMessage)
         {
             IsSuccess = isSuccess;
-            Value = value;
             ErrorType = errorType;
             ErrorMessage = errorMessage;
         }
 
-        public static Result<T> Success(T value)
+        public static Result Success()
         {
-            return new Result<T>(true, value, null ,null);
+            return new Result(true, null ,null);
         }
 
-        public static Result<T> Failure(ErrorType errorType, string errorMessage)
+        public static Result Failure(ErrorType errorType, string errorMessage)
         {
-            return new Result<T>(false, default, errorType, errorMessage);
+            return new Result(false, errorType, errorMessage);
         }
     }
 }

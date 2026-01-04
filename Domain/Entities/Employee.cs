@@ -13,7 +13,7 @@ namespace Domain.Entities
         public int PersonId { get; set; }
         public Person Person { get; set; } = null!;
 
-        public DateTime EmploymentDate { get; set; }
+        public DateOnly EmploymentDate { get; set; }
         public string Position { get; set; } = string.Empty;
 
         public List<NewsPost> CreatedNewsPosts { get; set; } = new();

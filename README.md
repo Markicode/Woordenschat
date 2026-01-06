@@ -9,6 +9,7 @@ with a strong emphasis on clean architecture, separation of concerns, and testab
 ## Features
 
 - Full CRUD operations for books (GET, POST, PUT, PATCH, DELETE)
+- Author resource with read and create endpoints
 - Books can belong to multiple genres (many-to-many)
 - Hierarchical genre structure (parent / sub-genres)
 - Clean, RESTful API design
@@ -98,7 +99,7 @@ This project follows a layered architecture inspired by **Clean Architecture** p
 - Handles request/response concerns only
 - Delegates all business logic to the Application layer
 
-- ### Controllers
+### Controllers
 
 Controllers are intentionally kept thin and inherit from a shared `BaseApiController`.
 
@@ -109,7 +110,7 @@ Responsibilities:
 
 All controllers follow a consistent pattern:
 - Call application service
-- Handle failure via centralized Result-to-HTTP mapping
+- A shared BaseApiController is used to centralize error-to-HTTP mapping and keep controllers consistent and minimal
 - Map successful results to DTOs
 
 ### DTO Usage
@@ -135,18 +136,19 @@ This approach makes control flow explicit, improves testability, and avoids exce
 
 ## API Overview
 
-| Method | Endpoint            | Description                         |
-|--------|---------------------|-------------------------------------|
-| GET    | /api/books          | Get all books                       |
-| GET    | /api/books/{id}     | Get a book by ID                    |
-| POST   | /api/books          | Create a new book                   |
-| PUT    | /api/books/{id}     | Replace an existing book            |
-| PATCH  | /api/books/{id}     | Partially update an existing book   |
-| DELETE | /api/books/{id}     | Delete an existing book             |
-| GET    | /api/genres         | Get all genres                      |
-| GET    | /api/genres/{id}    | Get a genre by ID                   |
-| GET    | /api/authors        | Get all authors                     |
-| GET    | /api/authors/{id}   | Get an author by ID                 |
+| Method | Endpoint            | Description                           |
+|--------|---------------------|---------------------------------------|
+| GET    | /api/books          | Get all books                         | 
+| GET    | /api/books/{id}     | Get a book by ID                      |
+| POST   | /api/books          | Create a new book                     |
+| PUT    | /api/books/{id}     | Replace an existing book              |
+| PATCH  | /api/books/{id}     | Partially update an existing book     |
+| DELETE | /api/books/{id}     | Delete an existing book               |
+| GET    | /api/genres         | Get all genres                        |
+| GET    | /api/genres/{id}    | Get a genre by ID                     |
+| GET    | /api/authors        | Get all authors (without books)       |
+| GET    | /api/authors/{id}   | Get an author by ID (including books) |
+| POST   | /api/authors        | Create a new author                   |
 
 Full API documentation is available via **Swagger** when running the project.
 
@@ -190,7 +192,8 @@ dependency injection, and Entity Framework Core.
 
 Current test coverage includes:
 
-- Happy-path API behavior for books and genres
+- Happy-path API behavior for books, authors, and genres
+- Validation and not-found scenarios
 - End-to-end HTTP request/response validation
 - Database interaction through EF Core
 - Verification of RESTful status codes

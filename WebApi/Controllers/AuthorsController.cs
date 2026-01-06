@@ -3,6 +3,7 @@ using Application.Mappings;
 using Application.Services.Authors;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions;
+using Application.Dtos.Authors;
 
 
 namespace WebApi.Controllers
@@ -46,6 +47,30 @@ namespace WebApi.Controllers
             }
             var requestedAuthor = response.Value!;
             return Ok(requestedAuthor.ToWithBooksDto());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post(CreateAuthorDto dto)
+        {
+            if(string.IsNullOrWhiteSpace(dto.FirstName) || string.IsNullOrWhiteSpace(dto.LastName))
+            {
+                return BadRequest("FirstName and LastName are required.");
+            }
+
+            var createAuthorCommand = new CreateAuthorCommand(dto.FirstName, dto.LastName, dto.BirthDate, dto.Bio);
+            var response = await _authorService.CreateAuthorAsync(createAuthorCommand);
+
+            if (!response.IsSuccess)
+            {
+                return response.ToActionResult(this);
+            }
+
+            var createdAuthor = response.Value!;
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = createdAuthor.Id },
+                createdAuthor.ToDto()
+            );
         }
 
     }

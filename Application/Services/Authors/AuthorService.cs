@@ -7,6 +7,7 @@ using Application.Common;
 using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Application.Enums;
 
 namespace Application.Services.Authors
 {
@@ -27,14 +28,33 @@ namespace Application.Services.Authors
 
         public async Task<Result<Author>> GetAuthorByIdAsync(int id)
         {
-            // Implementation for retrieving an author by ID
-            throw new NotImplementedException();
+            var author = await _context.Authors
+                .Include(a => a.Books)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (author == null)
+            {
+                return Result<Author>.Failure(ErrorType.NotFound, $"Author with ID {id} not found.");
+            }
+
+            return Result<Author>.Success(author);
         }
 
         public async Task<Result<Author>> CreateAuthorAsync(CreateAuthorCommand createAuthorCommand)
         {
-            // Implementation for creating a new author
-            throw new NotImplementedException();
+
+
+            var author = new Author
+            {
+                FirstName = createAuthorCommand.FirstName,
+                LastName = createAuthorCommand.LastName,
+                Bio = createAuthorCommand.Bio,
+                BirthDate = createAuthorCommand.BirthDate
+            };
+
+            _context.Authors.Add(author);
+            await _context.SaveChangesAsync();
+            return Result<Author>.Success(author);
         }
 
         public async Task<Result<Author>> ReplaceAuthorAsync(ReplaceAuthorCommand replaceAuthorCommand)

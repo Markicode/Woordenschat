@@ -1,18 +1,13 @@
-
+import styles from './Hero.module.css';
 
 export default function Hero() {
 
     return (
-        <div className="hero">
-            <div className="hero-title1"></div>
-            <div className="hero-middle">
-                <div>
-                </div>
-                <div>
-
-                </div>
-            </div>
-            <div className="hero-title2"></div>
-        </div>
-    );
+    <section className={styles.hero}>
+      <div className={styles.content}>
+        <h1><span className={styles.titleLeft}>Bibliotheek</span> <span className={styles.titleRight}>Woordenschat</span></h1>
+        <p>Ontdek de rijkdom van taal.</p>
+      </div>
+    </section>
+  );
 }

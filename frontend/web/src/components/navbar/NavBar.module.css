@@ -1,0 +1,27 @@
+.nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 1.5rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.overlay {
+  background: transparent;
+  color: white;
+}
+
+.normal {
+  background: #140e3c;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.links a {
+  margin-left: 2rem;
+  font-weight: 500;
+}

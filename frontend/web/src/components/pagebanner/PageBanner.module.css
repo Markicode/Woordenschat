@@ -1,0 +1,29 @@
+.banner {
+  position: relative;
+  height: 140px;
+
+  background-image:
+    linear-gradient(to right, rgba(10, 8, 30, 0.85), rgba(10, 8, 30, 0.6)),
+    url("../../assets/img/library-bg2.jpg");
+
+  background-size: cover;
+  background-position: top;
+  color: white;
+
+  display: flex;
+  align-items: center;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 3rem;
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+}
+
+.content img {
+  height: 48px;
+}

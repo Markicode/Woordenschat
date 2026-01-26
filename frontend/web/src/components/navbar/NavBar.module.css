@@ -1,8 +1,4 @@
 .nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-
   width: 100%;
 
   padding: 1.5rem 3rem;
@@ -12,9 +8,28 @@
   align-items: center;
 
   z-index: 10;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
   font-family: var(--font-title);
   font-size: 1.5rem;
+}
+
+.fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.scrolled {
+  background-image:
+    linear-gradient(to right, rgba(10, 8, 30, 0.95), rgba(10, 8, 30, 0.85)),
+    url("../../assets/img/library-bg2.jpg");
+
+  background-size: cover;
+  background-position: top;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .overlay {
@@ -31,4 +46,11 @@
 .links a {
   margin-left: 2rem;
   font-weight: 500;
+}
+
+.active {
+  color: var(--color-accent);
+  opacity: 1;
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: 4px;
 }

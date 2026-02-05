@@ -4,6 +4,7 @@ using Application.Dtos.Books;
 using Application.Mappings;
 using Application.Services.Books;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using WebApi.Extensions;
 
 namespace WebApi.Controllers
@@ -58,7 +59,10 @@ namespace WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(CreateBookDto dto)
         {
-            // TODO: Validate DTO (e.g., check for required fields, valid author and genre IDs, etc.)
+            if(dto.Title.IsNullOrEmpty() || !dto.GenreIds.Any() || !dto.AuthorIds.Any())
+            {
+                return BadRequest("Missing required field.");
+            }
             var createBookCommand = new CreateBookCommand(dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
             var response = await _bookService.CreateBookAsync(createBookCommand);

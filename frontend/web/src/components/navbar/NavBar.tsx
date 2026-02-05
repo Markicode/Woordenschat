@@ -45,10 +45,10 @@ export default function NavBar() {
           Home
         </NavLink>
         <NavLink
-          to="/library"
+          to="/books"
           className={({ isActive }) => (isActive ? styles.active : undefined)}
         >
-          Bibliotheek
+          Boeken
         </NavLink>
         <NavLink
           to="/login"

@@ -3,7 +3,7 @@ using Application.Enums;
 using Data;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Application.Common.Validation;
 
 namespace Application.Services.Books
 {
@@ -44,6 +44,39 @@ namespace Application.Services.Books
 
         public async Task<Result<Book>> CreateBookAsync(CreateBookCommand createBookCommand)
         {
+            if (createBookCommand.GenreIds is null || !createBookCommand.GenreIds.Any())
+            { 
+                return Result<Book>.Failure(ErrorType.ValidationError, "At least one genre ID must be provided.");
+            }
+
+            if (createBookCommand.AuthorIds is null || !createBookCommand.AuthorIds.Any())
+            {
+                return Result<Book>.Failure(ErrorType.ValidationError, "At least one author ID must be provided.");
+            }
+
+            if(createBookCommand.PublishedDate > DateOnly.FromDateTime(DateTime.Now))
+            {
+                return Result<Book>.Failure(ErrorType.ValidationError, "Published date cannot be in the future.");
+            }
+
+            if(!IsbnHelper.IsValid(createBookCommand.Isbn))
+            {
+                return Result<Book>.Failure(ErrorType.ValidationError, "Invalid ISBN format.");
+            }
+
+            if(createBookCommand.Isbn != null)
+            {
+                var normalizedIsbn = IsbnHelper.Normalize(createBookCommand.Isbn);
+
+                var exists = await _context.Books
+                    .AnyAsync(b => b.Isbn == normalizedIsbn);
+
+                if(exists)
+                    {
+                    return Result<Book>.Failure(ErrorType.Conflict, "A book with the same ISBN already exists.");
+                }
+            }
+
             var genreIds = createBookCommand.GenreIds.Distinct().ToList();
             var authorIds = createBookCommand.AuthorIds.Distinct().ToList();
 
@@ -83,6 +116,28 @@ namespace Application.Services.Books
 
         public async Task<Result<Book>> ReplaceBookAsync(ReplaceBookCommand replaceBookCommand)
         {
+            var book = await _context.Books
+                .Include(b => b.Authors)
+                .Include(b => b.Genres)
+                .FirstOrDefaultAsync(b => b.Id == replaceBookCommand.BookId);
+
+            if (book == null)
+            {
+                return Result<Book>.Failure(ErrorType.NotFound, "Book not found.");
+            }
+
+            book.Title = replaceBookCommand.Title;
+            book.Isbn = replaceBookCommand.Isbn;
+            book.Description = replaceBookCommand.Description;
+            book.PublishedDate = replaceBookCommand.PublishedDate;
+
+
+            if (replaceBookCommand.AuthorIds is null || !replaceBookCommand.AuthorIds.Any())
+                return Result<Book>.Failure(ErrorType.ValidationError, "At least one author is required.");
+
+            if (replaceBookCommand.GenreIds is null || !replaceBookCommand.GenreIds.Any())
+                return Result<Book>.Failure(ErrorType.ValidationError, "At least one genre is required.");
+
             var genreIds = replaceBookCommand.GenreIds.Distinct().ToList();
             var authorIds = replaceBookCommand.AuthorIds.Distinct().ToList();
 
@@ -104,20 +159,7 @@ namespace Application.Services.Books
                 return Result<Book>.Failure(ErrorType.ValidationError, "One or more genre IDs are invalid.");
             }
 
-            var book = await _context.Books
-                .Include(b => b.Authors)
-                .Include(b => b.Genres)
-                .FirstOrDefaultAsync(b => b.Id == replaceBookCommand.BookId);
 
-            if (book == null)
-            {
-                return Result<Book>.Failure(ErrorType.NotFound, "Book not found.");
-            }
-
-            book.Title = replaceBookCommand.Title;
-            book.Isbn = replaceBookCommand.Isbn;
-            book.Description = replaceBookCommand.Description;
-            book.PublishedDate = replaceBookCommand.PublishedDate;
 
             // Replace relations
             book.Authors.Clear();
@@ -167,6 +209,11 @@ namespace Application.Services.Books
 
             if (patchBookCommand.AuthorIds != null)
             {
+                if(!patchBookCommand.AuthorIds.Any())
+                {
+                    return Result<Book>.Failure(ErrorType.ValidationError, "At least one author ID must be provided.");
+                }
+
                 var authorIds = patchBookCommand.AuthorIds.Distinct().ToList();
 
                 var authors = await _context.Authors
@@ -187,6 +234,11 @@ namespace Application.Services.Books
 
             if (patchBookCommand.GenreIds != null)
             {
+                if (!patchBookCommand.GenreIds.Any())
+                {
+                    return Result<Book>.Failure(ErrorType.ValidationError, "At least one genre ID must be provided.");
+                }
+
                 var genreIds = patchBookCommand.GenreIds.Distinct().ToList();
 
                 var genres = await _context.Genres

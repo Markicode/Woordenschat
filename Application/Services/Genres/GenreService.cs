@@ -36,5 +36,19 @@ namespace Application.Services.Genres
             }
             return Result<Genre>.Success(genre);
         }
+
+        public async Task<Result<Genre>> CreateGenreAsync(CreateGenreCommand createGenreCommand)
+        {
+            var genre = new Genre
+            {
+                Name = createGenreCommand.Name,
+                ParentGenreId = createGenreCommand.ParentGenreId
+            };
+
+            _context.Genres.Add(genre);
+            await _context.SaveChangesAsync();
+
+            return Result<Genre>.Success(genre);
+        }
     }
 }

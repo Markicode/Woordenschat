@@ -1,12 +1,14 @@
-﻿# Library Management API
+﻿# Library Management System
 
-A RESTful Web API for managing a library system.
-This project is built as a learning-focused backend application using ASP.NET Core and Entity Framework Core, 
-with a strong emphasis on clean architecture, separation of concerns, and testability.
+A full-stack Library Management System built as a learning-focused project demonstrating modern backend architecture, integration testing, and a typed frontend consuming a REST API.
+
+The backend is built using ASP.NET Core Web API with Clean Architecture principles, Entity Framework Core, and MySQL, while the frontend is implemented using React + TypeScript.
 
 ---
 
 ## Features
+
+### Backend
 
 - Full CRUD operations for books (GET, POST, PUT, PATCH, DELETE)
 - Author resource with read and create endpoints
@@ -19,18 +21,36 @@ with a strong emphasis on clean architecture, separation of concerns, and testab
 - Centralized controller error handling via a shared base controller
 - Async data access with Entity Framework Core
 - Swagger / OpenAPI documentation
-- Automated integration tests
+- Automated integration tests with database reset per test run
+
+### Frontend
+
+- React + TypeScript frontend consuming the REST API
+- Typed service layer for API communication
+- Component-based UI architecture
+- Vite development environment
 
 ---
 
 ## Tech Stack
+
+### Backend
 
 - **.NET 8**
 - **ASP.NET Core Web API**
 - **Entity Framework Core**
 - **MySQL / MariaDB**
 - **Swagger (OpenAPI)**
-- **xUnit (integration testing with ASP.NET WebApplicationFactory)** 
+- **xUnit integration testing**
+- **WebApplicationFactory test host**
+- **Respawn database reset**
+
+### Frontend
+
+- **React**
+- **Typescript**
+- **Vite**
+- **Fetch-based API client**
 
 ---
 
@@ -38,6 +58,7 @@ with a strong emphasis on clean architecture, separation of concerns, and testab
 
 ```
 Library.sln
+
 ├── Application
 │   ├── Common
 │   ├── Dtos
@@ -59,14 +80,25 @@ Library.sln
 ├── WebApi
 │   ├── Controllers
 │   ├── Extensions
-│   ├── Properties
 │   ├── Json
+│   ├── Properties
 │   ├── Program.cs
 │   └── appsettings.json
 │
-└── WebApi.Tests
-    ├── Controllers
-    └── ApiFactory.cs
+├── WebApi.Tests
+│   ├── Controllers
+│   ├── Helpers
+│   ├── ApiFactory.cs
+│   └── Integration test setup
+│
+└── Frontend (React)
+    ├── src
+    │   ├── components
+    │   ├── pages
+    │   ├── services
+    │   └── models
+    ├── package.json
+    └── vite.config.ts
 ```
 
 ---
@@ -78,37 +110,51 @@ This project follows a layered architecture inspired by **Clean Architecture** p
 ### Layers
 
 #### Domain
-- Contains core business entities, enums, and interfaces
-- Has no dependencies on other layers
-- Represents the core business model
+
+- Core business entities
+- Business rules and interfaces
+- No dependencies on other layers
 
 #### Application
-- Contains application services (use cases)
-- Defines DTOs used for input and output
-- Contains explicit mapping logic between domain entities and DTOs
-- Orchestrates business operations without knowledge of HTTP or persistence details
+
+- Use-case driven application services
+- DTO definitions
+- Mapping logic between entities and DTOs
+- Business workflow orchestration
 
 #### Data
-- Handles persistence concerns
-- Contains the EF Core `DbContext`, entity configurations, migrations, and seed data
-- Implements repository and data access logic
+
+- Persistence logic
+- EF Core DbContext
+- Entity configurations
+- Database migrations
+- Seed data
 
 #### WebApi
-- Acts as the delivery layer
-- Exposes HTTP endpoints via controllers
-- Handles request/response concerns only
-- Delegates all business logic to the Application layer
+
+- HTTP controllers
+- Request / response handling
+- Delegation to application services
+- Centralized error mapping
+
+#### Frontend
+
+- React UI consuming REST endpoints
+- Typed service layer communicating with API
+- Component-based interface
 
 ### Controllers
 
 Controllers are intentionally kept thin and inherit from a shared `BaseApiController`.
 
 Responsibilities:
+
 - Translate HTTP requests into application commands
 - Delegate all business logic to application services
 - Convert application results into HTTP responses
 
 All controllers follow a consistent pattern:
+
 - Call application service
 - A shared BaseApiController is used to centralize error-to-HTTP mapping and keep controllers consistent and minimal
 - Map successful results to DTOs
@@ -116,6 +162,7 @@ All controllers follow a consistent pattern:
 ### DTO Usage
 
 DTOs are used to:
+
 - Decouple internal domain models from external API contracts
 - Prevent overexposing domain entities
 - Enable safe refactoring of internal architecture without breaking API behavior
@@ -131,24 +178,23 @@ The application uses an explicit `Result` / `Result<T>` pattern to handle succes
 
 This approach makes control flow explicit, improves testability, and avoids exception-driven business logic.
 
-
 ---
 
 ## API Overview
 
-| Method | Endpoint            | Description                           |
-|--------|---------------------|---------------------------------------|
-| GET    | /api/books          | Get all books                         | 
-| GET    | /api/books/{id}     | Get a book by ID                      |
-| POST   | /api/books          | Create a new book                     |
-| PUT    | /api/books/{id}     | Replace an existing book              |
-| PATCH  | /api/books/{id}     | Partially update an existing book     |
-| DELETE | /api/books/{id}     | Delete an existing book               |
-| GET    | /api/genres         | Get all genres                        |
-| GET    | /api/genres/{id}    | Get a genre by ID                     |
-| GET    | /api/authors        | Get all authors (without books)       |
-| GET    | /api/authors/{id}   | Get an author by ID (including books) |
-| POST   | /api/authors        | Create a new author                   |
+| Method | Endpoint          | Description                           |
+| ------ | ----------------- | ------------------------------------- |
+| GET    | /api/books        | Get all books                         |
+| GET    | /api/books/{id}   | Get a book by ID                      |
+| POST   | /api/books        | Create a new book                     |
+| PUT    | /api/books/{id}   | Replace an existing book              |
+| PATCH  | /api/books/{id}   | Partially update an existing book     |
+| DELETE | /api/books/{id}   | Delete an existing book               |
+| GET    | /api/genres       | Get all genres                        |
+| GET    | /api/genres/{id}  | Get a genre by ID                     |
+| GET    | /api/authors      | Get all authors (without books)       |
+| GET    | /api/authors/{id} | Get an author by ID (including books) |
+| POST   | /api/authors      | Create a new author                   |
 
 Full API documentation is available via **Swagger** when running the project.
 
@@ -182,7 +228,7 @@ https://localhost:<port>/swagger
 
 ---
 
-## Testing 
+## Testing
 
 This project includes automated integration tests using **xUnit**.
 
@@ -200,7 +246,7 @@ Current test coverage includes:
 
 Tests are executed using:
 
-```bash 
+```bash
 dotnet test
 ```
 
@@ -214,7 +260,7 @@ planned as future improvements.
 
 This project was created to practice and demonstrate:
 
-- Clean API design 
+- Clean API design
 - Layered / Clean Architecture principles
 - Entity Framework Core relationships
 - DTO mapping strategies
@@ -231,7 +277,7 @@ This project was created to practice and demonstrate:
 - Implement pagination and filtering for book listings
 - Improved validation and error handling
 - Additional API endpoints and resources
-- Frontend applications to consume the API
+- Advanced frontend features
 - CI pipeline
 - Expanded integration test coverage (edge cases, error scenarios)
 - Unit tests for domain and service logic

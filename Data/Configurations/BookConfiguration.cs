@@ -33,10 +33,14 @@ namespace Data.Configurations
 
             builder.Property(b => b.PublishedDate)
                 .HasConversion(
-                    v => v.ToDateTime(TimeOnly.MinValue),
-                    v => DateOnly.FromDateTime(v)
-                )
-                .HasColumnType("date");
+                v => v.HasValue
+                    ? v.Value.ToDateTime(TimeOnly.MinValue)
+                    : (DateTime?)null,
+                v => v.HasValue
+                    ? DateOnly.FromDateTime(v.Value)
+                    : (DateOnly?)null
+            )
+            .HasColumnType("date");
 
             builder
                 .HasMany(b => b.Authors)

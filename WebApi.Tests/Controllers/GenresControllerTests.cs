@@ -1,104 +1,94 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
-using Xunit;
-using Application.Dtos;
 using Application.Dtos.Genres;
+using FluentAssertions;
+using WebApi.Tests.Helpers;
+using Xunit;
 
 namespace WebApi.Tests.Controllers
 {
-    public class GenresControllerTests : IClassFixture<ApiFactory>
+    public class GenresControllerTests : IClassFixture<ApiFactory>, IAsyncLifetime
     {
+        private readonly ApiFactory _factory;
         private readonly HttpClient _client;
 
         public GenresControllerTests(ApiFactory factory)
         {
+            _factory = factory;
             _client = factory.CreateClient();
         }
 
-        [Fact]
-        public async Task GetGenres_ReturnsOk()
+        public async Task InitializeAsync()
         {
-            // Act
-            var response = await _client.GetAsync("api/genres");
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            await _factory.ResetDatabaseAsync();
         }
+
+        public Task DisposeAsync() => Task.CompletedTask;
 
         [Fact]
         public async Task GetGenres_ReturnsListOfGenres()
         {
+            // Arrange
+            var createdGenreId = await TestData.CreateGenre(_client);
+
+            // Act
             var response = await _client.GetAsync("api/genres");
 
-            response.EnsureSuccessStatusCode();
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var genres = await response.Content.ReadFromJsonAsync<List<GenreWithParentDto>>();
-
-            Assert.NotNull(genres);
-            Assert.NotEmpty(genres);
-
-            Assert.All(genres!, genre =>
-            {
-                Assert.True(genre.Id > 0);
-                Assert.False(string.IsNullOrWhiteSpace(genre.Name));
-            });
-        }
-
-        [Fact]
-        public async Task GetGenreById_ReturnsOk()
-        {
-            // Act
-            var response = await _client.GetAsync("api/genres/1");
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            genres.Should().Contain(g => g.Id == createdGenreId);
         }
 
         [Fact]
         public async Task GetGenreById_ReturnsGenre()
         {
-            var response = await _client.GetAsync("api/genres/1");
+            // Arrange
+            var createdGenreId = await TestData.CreateGenre(_client);
 
-            response.EnsureSuccessStatusCode();
+            // Act
+            var response = await _client.GetAsync($"api/genres/{createdGenreId}");
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var genre = await response.Content.ReadFromJsonAsync<GenreWithParentDto>();
-
-            Assert.NotNull(genre);
-
-            Assert.True(genre.Id > 0);
-            Assert.False(string.IsNullOrWhiteSpace(genre.Name));
+            genre!.Id.Should().Be(createdGenreId);
         }
 
         [Fact]
         public async Task GetGenreById_ReturnsNotFound()
         {
-            var response = await _client.GetAsync("api/genres/999");
+            // Act
+            var response = await _client.GetAsync("api/genres/99999");
 
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         [Fact]
         public async Task GetGenres_AllParentGenresValid()
         {
-            var response = await _client.GetAsync("api/genres");
-            response.EnsureSuccessStatusCode();
-            
-            var genres = await response.Content.ReadFromJsonAsync<List<GenreWithParentDto>>();
-            Assert.All(genres!, genre =>
+            // Arrange
+            var parentId = await TestData.CreateGenre(_client);
+
+            var childDto = new
             {
-                if (genre.ParentGenreId.HasValue)
-                { 
-                    var parentGenre = genres!.FirstOrDefault(g => g.Id == genre.ParentGenreId.Value);
-                    Assert.NotNull(parentGenre);
-                    Assert.True(parentGenre.Id > 0);
-                    Assert.False(string.IsNullOrWhiteSpace(parentGenre.Name));
-                }
-            });
+                name = "ChildGenre",
+                parentGenreId = parentId
+            };
+
+            var createChild = await _client.PostAsJsonAsync("/api/genres", childDto);
+            createChild.EnsureSuccessStatusCode();
+
+            // Act
+            var response = await _client.GetAsync("api/genres");
+            var genres = await response.Content.ReadFromJsonAsync<List<GenreWithParentDto>>();
+
+            // Assert
+            genres!.Should().Contain(g => g.Id == parentId);
+            genres.Should().Contain(g => g.ParentGenreId == parentId);
         }
     }
 }

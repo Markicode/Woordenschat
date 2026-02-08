@@ -1,24 +1,37 @@
-﻿using System;
+﻿using Application.Dtos;
+using Data;
+using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using System.Threading.Tasks;
+using WebApi.Tests.Helpers;
 using Xunit;
-using Application.Dtos;
-using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.Tests.Controllers
 {
-    public class BooksControllerTests : IClassFixture<ApiFactory>
+    public class BooksControllerTests : IClassFixture<ApiFactory>, IAsyncLifetime
     {
+        private readonly ApiFactory _factory;
         private readonly HttpClient _client;
 
         public BooksControllerTests(ApiFactory factory)
         {
+            _factory = factory;
             _client = factory.CreateClient();
         }
+
+        public async Task InitializeAsync()
+        {
+            await _factory.ResetDatabaseAsync();
+        }
+
+        public Task DisposeAsync() => Task.CompletedTask;
 
         #region GET
 
@@ -26,21 +39,7 @@ namespace WebApi.Tests.Controllers
         public async Task GetBooks_ReturnsBooks()
         {
             // Arrange - create a book first
-            var bookDto = new
-            {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
-                title = "GetBookById Testbook",
-                description = "BookById description",
-                publishedDate = "2022-02-02",
-                genreIds = new[] { 24 },
-                authorIds = new[] { 1 }
-            };
-
-            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
-            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-
-            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
-            createdBook.Should().NotBeNull();
+            var createdBook = await TestData.CreateBook(_client);
 
             // Act - get all books
             var response = await _client.GetAsync("/api/books");
@@ -49,7 +48,6 @@ namespace WebApi.Tests.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var books = await response.Content.ReadFromJsonAsync<List<BookDto>>();
-            books.Should().NotBeNull();
             books!.Should().Contain(b => b.Id == createdBook!.Id);
 
         }
@@ -58,21 +56,7 @@ namespace WebApi.Tests.Controllers
         public async Task GetBookById_ReturnsBook()
         {
             // Arrange - create a book first
-            var bookDto = new
-            {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
-                title = "GetBookById Testbook",
-                description = "BookById description",
-                publishedDate = "2022-02-02",
-                genreIds = new[] { 24 },
-                authorIds = new[] { 1 }
-            };
-
-            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
-            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-
-            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
-            createdBook.Should().NotBeNull();
+            var createdBook = await TestData.CreateBook(_client);
 
             // Act - get the book by ID
             var response = await _client.GetAsync($"/api/books/{createdBook!.Id}");
@@ -81,9 +65,9 @@ namespace WebApi.Tests.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var fetchedBook = await response.Content.ReadFromJsonAsync<BookDto>();
-            fetchedBook.Should().NotBeNull();
+
             fetchedBook!.Id.Should().Be(createdBook.Id);
-            fetchedBook.Title.Should().Be("GetBookById Testbook");
+            fetchedBook.Title.Should().Be(createdBook.Title);
         }
 
         #endregion
@@ -94,21 +78,26 @@ namespace WebApi.Tests.Controllers
         public async Task CreateBook_Returns201()
         {
             // Arrange - Create a new book
-            var bookDto = new
+            var authorId = await TestData.CreateAuthor(_client);
+            var genreId = await TestData.CreateGenre(_client);
+
+            var dto = new
             {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
-                title = "Test Book",
-                publishedDate = new DateOnly(2023, 1, 1),
-                genreIds = new[] { 24 },
-                authorIds = new[] { 1 }
+                isbn = TestIsbn.Next(),
+                title = "CreateBook Test",
+                publishedDate = new DateOnly(2020, 1, 1),
+                genreIds = new[] { genreId },
+                authorIds = new[] { authorId }
             };
 
-            // Act - Post the new book
-            var response = await _client.PostAsJsonAsync("/api/books", bookDto);
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/books", dto);
 
-            // Assert - Check for 201 Created response and Location header
+            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.Created);
-            response.Headers.Location.Should().NotBeNull();
+
+            var created = await response.Content.ReadFromJsonAsync<BookDto>();
+            created!.Title.Should().Be("CreateBook Test");
         }
 
         #endregion
@@ -119,33 +108,20 @@ namespace WebApi.Tests.Controllers
         public async Task ReplaceBook_ReturnsUpdatedBook()
         {
             // Arrange - create a book first
-            // TODO: Consider using a factory or builder pattern for creating test data
-            var bookDto = new
-            {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
-                title = "Original Book Title",
-                description = "Original Description",
-                publishedDate = "2022-02-02",
-                genreIds = new[] { 24 },
-                authorIds = new[] { 1 }
-            };
-
-            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
-            createResponse.EnsureSuccessStatusCode();
-
-            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
-            createdBook.Should().NotBeNull();
+            var createdBook = await TestData.CreateBook(_client);
 
             // Act - replace the book
+            var newAuthorId = await TestData.CreateAuthor(_client);
+            var newGenreId = await TestData.CreateGenre(_client);
 
             var updateDto = new
             {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
+                isbn = TestIsbn.Next(),
                 title = "Updated title",
                 description = "Updated description",
                 publishedDate = "2021-01-01",
-                authorIds = new[] { 2 },
-                genreIds = new[] { 30 }
+                authorIds = new[] { newAuthorId },
+                genreIds = new[] { newGenreId }
             };
 
             var putResponse = await _client.PutAsJsonAsync(
@@ -160,17 +136,26 @@ namespace WebApi.Tests.Controllers
             }
 
             // Assert - verify the book was updated
+            var originalAuthorIds = createdBook.Authors.Select(a => a.Id).ToList();
+            var originalGenreIds = createdBook.Genres.Select(g => g.Id).ToList();
+
             putResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var updatedBook = await putResponse.Content.ReadFromJsonAsync<BookDto>();
+
+            updatedBook.Should().NotBeNull();
+
             updatedBook!.Title.Should().Be("Updated title");
             updatedBook.Isbn.Should().Be(updateDto.isbn);
             updatedBook.Description.Should().Be("Updated description");
             updatedBook.PublishedDate.Should().Be(new DateOnly(2021, 1, 1));
-            updatedBook.Authors.Should().Contain(a => a.Id == 2);
-            updatedBook.Genres.Should().Contain(g => g.Id == 30);
-            updatedBook.Authors.Should().NotContain(a => a.Id == 1);
-            updatedBook.Genres.Should().NotContain(g => g.Id == 24);
+            updatedBook.Authors.Should().Contain(a => a.Id == newAuthorId);
+            updatedBook.Genres.Should().Contain(g => g.Id == newGenreId);
+            updatedBook.Authors.Select(a => a.Id)
+                .Should().NotIntersectWith(originalAuthorIds);
+
+            updatedBook.Genres.Select(g => g.Id)
+                .Should().NotIntersectWith(originalGenreIds);
 
             var getResponse = await _client.GetAsync($"/api/books/{createdBook.Id}");
             getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -179,30 +164,34 @@ namespace WebApi.Tests.Controllers
             fetchedBook!.Title.Should().Be("Updated title");
 
         }
-
         [Fact]
         public async Task ReplaceBook_ReturnsNotFound_ForNonExistentBook()
         {
-            // Arrange - prepare update DTO
+            // Arrange
+            var authorId = await TestData.CreateAuthor(_client);
+            var genreId = await TestData.CreateGenre(_client);
+
             var updateDto = new
             {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
+                isbn = TestIsbn.Next(),
                 title = "Updated title",
                 description = "Updated description",
                 publishedDate = "2021-01-01",
-                authorIds = new[] { 2 },
-                genreIds = new[] { 30 }
+                authorIds = new[] { authorId },
+                genreIds = new[] { genreId }
             };
-            // Act - attempt to replace a non-existent book
+
             var nonExistentBookId = int.MaxValue;
-            var putResponse = await _client.PutAsJsonAsync(
+
+            // Act
+            var response = await _client.PutAsJsonAsync(
                 $"/api/books/{nonExistentBookId}",
                 updateDto
             );
-            // Assert - verify NotFound is returned
-            putResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        }
 
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
         #endregion
 
         #region DELETE
@@ -210,26 +199,15 @@ namespace WebApi.Tests.Controllers
         [Fact]
         public async Task DeleteBook_RemovesBookAndReturnsNoContent()
         {
-            // Arrange - create a book first
-            var bookDto = new
-            {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
-                title = "Book to be deleted",
-                description = "This book will be deleted in the test",
-                publishedDate = "2022-02-02",
-                genreIds = new[] { 24 },
-                authorIds = new[] { 1 }
-            };
-            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
-            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
-            createdBook.Should().NotBeNull();
+            // Arrange
+            var createdBook = await TestData.CreateBook(_client);
 
-            // Act - delete the book
-            var deleteResponse = await _client.DeleteAsync($"/api/books/{createdBook!.Id}");
+            // Act
+            var deleteResponse = await _client.DeleteAsync($"/api/books/{createdBook.Id}");
 
-            // Assert - verify the book was deleted
+            // Assert
             deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
             var getResponse = await _client.GetAsync($"/api/books/{createdBook.Id}");
             getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
@@ -237,11 +215,13 @@ namespace WebApi.Tests.Controllers
         [Fact]
         public async Task DeleteBook_ReturnsNotFound_ForNonExistentBook()
         {
-            // Arrange - use a non-existent book ID
+            // Arrange
             var nonExistentBookId = int.MaxValue;
-            // Act - attempt to delete the non-existent book
+
+            // Act
             var deleteResponse = await _client.DeleteAsync($"/api/books/{nonExistentBookId}");
-            // Assert - verify NotFound is returned
+
+            // Assert
             deleteResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
@@ -249,13 +229,13 @@ namespace WebApi.Tests.Controllers
 
         #region PATCH
 
-        [Fact]
+        /*[Fact]
         public async Task PatchBook_UpdatesTitle_WithoutAffectingOtherFields()
         {
             // Arrange - create a book first
             var bookDto = new
             {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
+                isbn = TestIsbn.Next(),
                 title = "Book to be patched",
                 description = "This book will be patched in the test",
                 publishedDate = "2022-02-02",
@@ -291,46 +271,66 @@ namespace WebApi.Tests.Controllers
             patchedBook.Isbn.Should().Be(originalIsbn);
             patchedBook.Authors.Select(a => a.Id).Should().BeEquivalentTo(originalAuthors);
             patchedBook.Genres.Select(g => g.Id).Should().BeEquivalentTo(originalGenres);
+        }*/
+        [Fact]
+        public async Task PatchBook_UpdatesTitle_WithoutAffectingOtherFields()
+        {
+            // Arrange
+            var createdBook = await TestData.CreateBook(_client);
+
+            var originalDescription = createdBook.Description;
+            var originalIsbn = createdBook.Isbn;
+            var originalAuthors = createdBook.Authors.Select(a => a.Id).ToList();
+            var originalGenres = createdBook.Genres.Select(g => g.Id).ToList();
+
+            var patchDto = new
+            {
+                title = "Patched Book Title"
+            };
+
+            // Act
+            var patchResponse = await _client.PatchAsJsonAsync(
+                $"/api/books/{createdBook.Id}",
+                patchDto
+            );
+
+            // Assert
+            patchResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var patchedBook = await patchResponse.Content.ReadFromJsonAsync<BookDto>();
+
+            patchedBook!.Title.Should().Be("Patched Book Title");
+            patchedBook.Description.Should().Be(originalDescription);
+            patchedBook.Isbn.Should().Be(originalIsbn);
+            patchedBook.Authors.Select(a => a.Id).Should().BeEquivalentTo(originalAuthors);
+            patchedBook.Genres.Select(g => g.Id).Should().BeEquivalentTo(originalGenres);
         }
 
         [Fact]
         public async Task PatchBook_ReturnsBadRequest_OnEmptyBody()
         {
-            // Arrange - create a book and prepare empty patch DTO
-            var bookDto = new
-            {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
-                title = "Book to be patched",
-                description = "This book will be patched in the test",
-                publishedDate = "2022-02-02",
-                genreIds = new[] { 24 },
-                authorIds = new[] { 1 }
-            };
-            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
-            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
-            createdBook.Should().NotBeNull();
+            // Arrange
+            var createdBook = await TestData.CreateBook(_client);
 
             var emptyDto = new { };
 
-            // Act - attempt to patch with empty body
+            // Act
             var patchResponse = await _client.PatchAsJsonAsync(
-                $"/api/books/{createdBook!.Id}",
+                $"/api/books/{createdBook.Id}",
                 emptyDto
             );
 
-            // Assert - verify BadRequest is returned
+            // Assert
             patchResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-
         }
 
-        [Fact]
+        /*[Fact]
         public async Task PatchBook_ReturnsBadRequest_WhenGenreDoesNotExist()
         {
             // Arrange - create a book and prepare invalid patch DTO
             var bookDto = new
             {
-                isbn = Guid.NewGuid().ToString("N").Substring(0, 13),
+                isbn = TestIsbn.Next(),
                 title = "Book to be patched",
                 description = "This book will be patched in the test",
                 publishedDate = "2022-02-02",
@@ -364,6 +364,34 @@ namespace WebApi.Tests.Controllers
             var unpatchedBook = await unpatchedBookResponse.Content.ReadFromJsonAsync<BookDto>();
             unpatchedBook!.Genres.Select(g => g.Id).Should().BeEquivalentTo(originalGenreIds);
 
+        }*/
+        [Fact]
+        public async Task PatchBook_ReturnsBadRequest_WhenGenreDoesNotExist()
+        {
+            // Arrange
+            var createdBook = await TestData.CreateBook(_client);
+
+            var originalGenreIds = createdBook.Genres.Select(g => g.Id).ToList();
+
+            var patchDto = new
+            {
+                genreIds = new[] { int.MaxValue }
+            };
+
+            // Act
+            var response = await _client.PatchAsJsonAsync(
+                $"/api/books/{createdBook.Id}",
+                patchDto
+            );
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+            var getResponse = await _client.GetAsync($"/api/books/{createdBook.Id}");
+            var unpatchedBook = await getResponse.Content.ReadFromJsonAsync<BookDto>();
+
+            unpatchedBook!.Genres.Select(g => g.Id)
+                .Should().BeEquivalentTo(originalGenreIds);
         }
 
         #endregion

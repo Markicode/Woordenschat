@@ -22,7 +22,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetBooks()
         {
             var response = await _bookService.GetBooksAsync();
 
@@ -41,7 +41,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetBookById(int id)
         {
             var response = await _bookService.GetBookByIdAsync(id);
 
@@ -57,7 +57,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(CreateBookDto dto)
+        public async Task<IActionResult> CreateBook(CreateBookDto dto)
         {
             if(dto.Title.IsNullOrEmpty() || !dto.GenreIds.Any() || !dto.AuthorIds.Any())
             {
@@ -76,13 +76,13 @@ namespace WebApi.Controllers
 
             var bookDto = createdBook.ToDto();
 
-            return CreatedAtAction(nameof(GetById), new { id = bookDto.Id }, bookDto);
+            return CreatedAtAction(nameof(GetBookById), new { id = bookDto.Id }, bookDto);
 
         }
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, ReplaceBookDto dto)
+        public async Task<IActionResult> ReplaceBook(int id, ReplaceBookDto dto)
         {
             var replaceBookCommand = new ReplaceBookCommand(id, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
@@ -97,7 +97,7 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteBook(int id)
         {
             var response = await _bookService.DeleteBookAsync(id);
 
@@ -110,7 +110,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> Patch(int id, PatchBookDto dto)
+        public async Task<IActionResult> PatchBook(int id, PatchBookDto dto)
         {
             if (dto.Isbn is null &&
                 dto.Title is null &&

@@ -1,4 +1,5 @@
 ﻿
+using Application.Dtos.Genres;
 using Application.Mappings;
 using Application.Services.Genres;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ namespace WebApi.Controllers
 
         // GET api/genres
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetGenres()
         {
             var response = await _genreService.GetGenresAsync();
 
@@ -38,7 +39,7 @@ namespace WebApi.Controllers
 
         // GET api/genres/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetGenreById(int id)
         {
             var response =  await _genreService.GetGenreByIdAsync(id);
 
@@ -48,6 +49,24 @@ namespace WebApi.Controllers
             }
  
             return Ok(response.Value!.ToWithParentDto());
+        }
+
+        // POST api/genres
+        [HttpPost]
+        public async Task<IActionResult> CreateGenre(CreateGenreDto createGenreDto)
+        {
+            CreateGenreCommand createGenreCommand = new CreateGenreCommand(createGenreDto.Name, createGenreDto.ParentGenreId);
+
+            var response = await _genreService.CreateGenreAsync(createGenreCommand);
+
+            if (!response.IsSuccess)
+            {
+                return response.ToActionResult(this);
+            }
+
+            var genreDto = response.Value!.ToWithParentDto();
+
+            return CreatedAtAction(nameof(GetGenreById), new { id = genreDto.Id }, genreDto);
         }
     }
 }

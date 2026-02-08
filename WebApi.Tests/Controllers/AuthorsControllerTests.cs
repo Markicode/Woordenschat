@@ -11,14 +11,23 @@ using Microsoft.AspNetCore.Http;
 
 namespace WebApi.Tests.Controllers
 {
-    public class AuthorsControllerTests : IClassFixture<ApiFactory>
+    public class AuthorsControllerTests : IClassFixture<ApiFactory>, IAsyncLifetime
     {
+        private readonly ApiFactory _factory;
         private readonly HttpClient _client;
 
         public AuthorsControllerTests(ApiFactory factory)
         {
+            _factory = factory;
             _client = factory.CreateClient();
         }
+
+        public async Task InitializeAsync()
+        {
+            await _factory.ResetDatabaseAsync();
+        }
+
+        public Task DisposeAsync() => Task.CompletedTask;
 
         #region GET
 

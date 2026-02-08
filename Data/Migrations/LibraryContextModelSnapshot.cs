@@ -134,7 +134,7 @@ namespace Data.Migrations
                         .HasMaxLength(13)
                         .HasColumnType("varchar(13)");
 
-                    b.Property<DateTime>("PublishedDate")
+                    b.Property<DateTime?>("PublishedDate")
                         .HasColumnType("date");
 
                     b.Property<string>("Title")

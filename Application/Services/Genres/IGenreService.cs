@@ -13,5 +13,7 @@ namespace Application.Services.Genres
         Task<Result<List<Genre>>> GetGenresAsync();
 
         Task<Result<Genre>> GetGenreByIdAsync(int id);
+
+        Task<Result<Genre>> CreateGenreAsync(CreateGenreCommand createGenreCommand);
     }
 }

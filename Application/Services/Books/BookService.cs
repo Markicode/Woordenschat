@@ -59,13 +59,13 @@ namespace Application.Services.Books
                 return Result<Book>.Failure(ErrorType.ValidationError, "Published date cannot be in the future.");
             }
 
-            if(!IsbnHelper.IsValid(createBookCommand.Isbn))
-            {
-                return Result<Book>.Failure(ErrorType.ValidationError, "Invalid ISBN format.");
-            }
-
             if(createBookCommand.Isbn != null)
             {
+                if (!IsbnHelper.IsValid(createBookCommand.Isbn))
+                {
+                    return Result<Book>.Failure(ErrorType.ValidationError, "Invalid ISBN format.");
+                }
+
                 var normalizedIsbn = IsbnHelper.Normalize(createBookCommand.Isbn);
 
                 var exists = await _context.Books

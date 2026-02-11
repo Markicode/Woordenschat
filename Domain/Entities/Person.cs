@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Enums;
 
 namespace Domain.Entities
 {
@@ -21,5 +22,10 @@ namespace Domain.Entities
 
         public Member? Member { get; set; }
         public Employee? Employee { get; set; }
+
+        public PersonStatus Status { get; private set; }
+        public DateTime? StatusChangedAtUtc { get; private set; }
     }
+
+    
 }

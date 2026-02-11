@@ -229,49 +229,6 @@ namespace WebApi.Tests.Controllers
 
         #region PATCH
 
-        /*[Fact]
-        public async Task PatchBook_UpdatesTitle_WithoutAffectingOtherFields()
-        {
-            // Arrange - create a book first
-            var bookDto = new
-            {
-                isbn = TestIsbn.Next(),
-                title = "Book to be patched",
-                description = "This book will be patched in the test",
-                publishedDate = "2022-02-02",
-                genreIds = new[] { 24 },
-                authorIds = new[] { 1 }
-            };
-            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
-            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
-            createdBook.Should().NotBeNull();
-
-            var originalDescription = createdBook.Description;
-            var originalIsbn = createdBook.Isbn;
-            var originalAuthors = createdBook.Authors.Select(a => a.Id).ToList();
-            var originalGenres = createdBook.Genres.Select(g => g.Id).ToList();
-
-            // Act - patch the book's title
-            var patchBookDto = new
-            {
-                title = "Patched Book Title"
-            };
-
-            var patchResponse = await _client.PatchAsJsonAsync(
-                $"/api/books/{createdBook!.Id}",
-                patchBookDto
-            );
-
-            // Assert - verify the book's title was updated
-            patchResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            var patchedBook = await patchResponse.Content.ReadFromJsonAsync<BookDto>();
-            patchedBook!.Title.Should().Be("Patched Book Title");
-            patchedBook.Description.Should().Be(originalDescription);
-            patchedBook.Isbn.Should().Be(originalIsbn);
-            patchedBook.Authors.Select(a => a.Id).Should().BeEquivalentTo(originalAuthors);
-            patchedBook.Genres.Select(g => g.Id).Should().BeEquivalentTo(originalGenres);
-        }*/
         [Fact]
         public async Task PatchBook_UpdatesTitle_WithoutAffectingOtherFields()
         {
@@ -324,47 +281,6 @@ namespace WebApi.Tests.Controllers
             patchResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
-        /*[Fact]
-        public async Task PatchBook_ReturnsBadRequest_WhenGenreDoesNotExist()
-        {
-            // Arrange - create a book and prepare invalid patch DTO
-            var bookDto = new
-            {
-                isbn = TestIsbn.Next(),
-                title = "Book to be patched",
-                description = "This book will be patched in the test",
-                publishedDate = "2022-02-02",
-                genreIds = new[] { 24 },
-                authorIds = new[] { 1 }
-            };
-            
-            var createResponse = await _client.PostAsJsonAsync("/api/books", bookDto);
-            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-            var createdBook = await createResponse.Content.ReadFromJsonAsync<BookDto>();
-            createdBook.Should().NotBeNull();
-
-            var originalGenreIds = createdBook!.Genres.Select(g => g.Id).ToList();
-
-            var patchDto = new
-            {
-                genreIds = new[] { int.MaxValue }
-            };
-
-            // Act - attempt to patch with non-existent genre ID
-
-            var response = await _client.PatchAsJsonAsync(
-                $"/api/books/{createdBook.Id}",
-                patchDto
-            );
-
-            // Assert - verify BadRequest is returned
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            var unpatchedBookResponse = await _client.GetAsync($"/api/books/{createdBook.Id}");
-            unpatchedBookResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            var unpatchedBook = await unpatchedBookResponse.Content.ReadFromJsonAsync<BookDto>();
-            unpatchedBook!.Genres.Select(g => g.Id).Should().BeEquivalentTo(originalGenreIds);
-
-        }*/
         [Fact]
         public async Task PatchBook_ReturnsBadRequest_WhenGenreDoesNotExist()
         {

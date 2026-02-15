@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Enums;
 
 namespace Domain.Entities
 {
@@ -20,5 +21,8 @@ namespace Domain.Entities
 
         public List<Reservation> Reservations { get; set; } = new();
         public List<Loan> Loans { get; set; } = new();
+
+        public MemberStatus Status { get; private set; }
+        public DateTime StatusChangedAtUtc { get; private set; }
     }
 }

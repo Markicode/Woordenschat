@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Enums
 {
-    public enum BookCondition
+    public enum EmployeeStatus
     {
-
+        Active = 0,
+        Inactive = 1
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Enums;
 
 namespace Domain.Entities
 {
@@ -12,5 +13,8 @@ namespace Domain.Entities
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public List<Person> Persons { get; set; } = new();
+
+        public UserStatus Status { get; private set; }
+        public DateTime StatusChangedAtUtc { get; private set; }
     }
 }

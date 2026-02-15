@@ -2,6 +2,7 @@
 using Application.Enums;
 using Data;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -51,7 +52,16 @@ namespace Application.Services.Persons
             {
                 return Result<Unit>.Failure(ErrorType.NotFound, "Person not found.");
             }
-            _context.Persons.Remove(person);
+
+            // TODO: Implement member use cases in which a person can't be anonymized in stead of checking against suspended member status.
+            if (person.Member != null && (person.Member.Status == MemberStatus.Active || person.Member.Status == MemberStatus.Suspended))
+                return Result<Unit>.Failure(ErrorType.Forbidden, "Person has active member role and cannot be deleted.");
+            if (person.Employee != null && person.Employee.Status == EmployeeStatus.Active)
+                return Result<Unit>.Failure(ErrorType.Forbidden, "Person has active employee role and cannot be deleted.");
+            if (person.User != null && person.User.Status == UserStatus.Active)
+                return Result<Unit>.Failure(ErrorType.Forbidden, "Person has active user role and cannot be deleted.");
+
+            person.Anonymize();
             await _context.SaveChangesAsync();
             return Result<Unit>.Success(Unit.Value);
         }

@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -30,6 +31,12 @@ namespace Data.Configurations
             builder
                 .HasIndex(b => b.Isbn)
                 .IsUnique();
+
+            builder.Property(b => b.Isbn)
+                .HasConversion(
+                    isbn => isbn == null ? null : isbn.Value,
+                    value => value == null ? null : new Isbn(value)
+                );
 
             builder.Property(b => b.PublishedDate)
                 .HasConversion(

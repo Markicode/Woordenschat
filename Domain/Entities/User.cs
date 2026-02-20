@@ -15,6 +15,6 @@ namespace Domain.Entities
         public List<Person> Persons { get; set; } = new();
 
         public UserStatus Status { get; private set; }
-        public DateTime StatusChangedAtUtc { get; private set; }
+        public DateTime? StatusChangedAtUtc { get; private set; }
     }
 }

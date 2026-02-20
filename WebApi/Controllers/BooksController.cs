@@ -1,11 +1,15 @@
 ﻿
+using Application.Common;
 using Application.Dtos;
 using Application.Dtos.Books;
 using Application.Mappings;
 using Application.Services.Books;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Globalization;
+using System.Text.Json;
 using WebApi.Extensions;
+using WebApi.Helpers;
 
 namespace WebApi.Controllers
 {
@@ -59,10 +63,6 @@ namespace WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBook(CreateBookDto dto)
         {
-            if(dto.Title.IsNullOrEmpty() || !dto.GenreIds.Any() || !dto.AuthorIds.Any())
-            {
-                return BadRequest("Missing required field.");
-            }
             var createBookCommand = new CreateBookCommand(dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
             var response = await _bookService.CreateBookAsync(createBookCommand);
@@ -112,17 +112,48 @@ namespace WebApi.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchBook(int id, PatchBookDto dto)
         {
-            if (dto.Isbn is null &&
+            Optional<DateOnly?> publishedDate = default;
+            var isbn = PatchParsingHelper.ParseOptional(dto.Isbn, e => e.GetString());
+            var description = PatchParsingHelper.ParseOptional(dto.Description, e => e.GetString());
+
+            try
+            {
+                publishedDate = PatchParsingHelper.ParseOptional(
+                    dto.PublishedDate,
+                    e =>
+                    {
+                        if (!DateOnly.TryParseExact(
+                            e.GetString(),
+                            "yyyy-MM-dd",
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
+                            out var date))
+                        {
+                            throw new FormatException("Invalid date format. Use yyyy-MM-dd.");
+                        }
+
+                        return (DateOnly?)date;
+                    });
+            }
+            catch (FormatException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+
+            if (!dto.Isbn.HasValue &&
                 dto.Title is null &&
-                dto.Description is null &&
-                dto.PublishedDate is null &&
+                !dto.Description.HasValue &&
+                !dto.PublishedDate.HasValue &&
                 dto.AuthorIds is null &&
                 dto.GenreIds is null)
             {
                 return BadRequest("No fields provided to patch.");
             }
 
-            var patchBookCommand = new PatchBookCommand(id, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
+           
+
+            var patchBookCommand = new PatchBookCommand(id, isbn, dto.Title, description, publishedDate, dto.AuthorIds, dto.GenreIds);
             var response = await _bookService.PatchBookAsync(patchBookCommand);
 
             if (!response.IsSuccess)
@@ -134,3 +165,5 @@ namespace WebApi.Controllers
 
     }
 }
+
+// TODO: Dive into FluentValidation

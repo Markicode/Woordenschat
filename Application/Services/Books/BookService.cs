@@ -2,8 +2,10 @@
 using Application.Enums;
 using Data;
 using Domain.Entities;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-using Application.Common.Validation;
+using System.Text.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Application.Services.Books
 {
@@ -44,69 +46,49 @@ namespace Application.Services.Books
 
         public async Task<Result<Book>> CreateBookAsync(CreateBookCommand createBookCommand)
         {
-            if (createBookCommand.GenreIds is null || !createBookCommand.GenreIds.Any())
-            { 
-                return Result<Book>.Failure(ErrorType.ValidationError, "At least one genre ID must be provided.");
-            }
+            Isbn? isbn = null;
 
-            if (createBookCommand.AuthorIds is null || !createBookCommand.AuthorIds.Any())
+            if(createBookCommand.Isbn is not null)
             {
-                return Result<Book>.Failure(ErrorType.ValidationError, "At least one author ID must be provided.");
-            }
-
-            if(createBookCommand.PublishedDate > DateOnly.FromDateTime(DateTime.Now))
-            {
-                return Result<Book>.Failure(ErrorType.ValidationError, "Published date cannot be in the future.");
-            }
-
-            if(createBookCommand.Isbn != null)
-            {
-                if (!IsbnHelper.IsValid(createBookCommand.Isbn))
+                try
                 {
-                    return Result<Book>.Failure(ErrorType.ValidationError, "Invalid ISBN format.");
+                    isbn = new Isbn(createBookCommand.Isbn);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Result<Book>.Failure(ErrorType.ValidationError, ex.Message);
                 }
 
-                var normalizedIsbn = IsbnHelper.Normalize(createBookCommand.Isbn);
-
                 var exists = await _context.Books
-                    .AnyAsync(b => b.Isbn == normalizedIsbn);
+                    .AnyAsync(b => b.Isbn == isbn);
 
-                if(exists)
-                    {
+                if (exists)
+                {
                     return Result<Book>.Failure(ErrorType.Conflict, "A book with the same ISBN already exists.");
                 }
             }
 
-            var genreIds = createBookCommand.GenreIds.Distinct().ToList();
-            var authorIds = createBookCommand.AuthorIds.Distinct().ToList();
+            var genresResult = await LoadGenres(createBookCommand.GenreIds);
+            if (!genresResult.IsSuccess)
+                return Result<Book>.Failure(genresResult.ErrorType, genresResult.ErrorMessage!);
 
-            var genres = await _context.Genres
-            .Where(g => genreIds.Contains(g.Id))
-            .ToListAsync();
+            var authorsResult = await LoadAuthors(createBookCommand.AuthorIds);
+            if (!authorsResult.IsSuccess)
+                return Result<Book>.Failure(authorsResult.ErrorType, authorsResult.ErrorMessage!);
 
-            var authors = await _context.Authors
-                .Where(a => authorIds.Contains(a.Id))
-                .ToListAsync();
+            var genres = genresResult.Value!;
+            var authors = authorsResult.Value!;
 
-            if(authors.Count != authorIds.Count)
+            Book? book = null;
+
+            try
             {
-                return Result<Book>.Failure(ErrorType.ValidationError, "One or more author IDs are invalid.");
+                book = new Book(createBookCommand.Title, createBookCommand.PublishedDate, isbn, createBookCommand.Description, genres, authors);
             }
-
-            if (genres.Count != genreIds.Count)
+            catch (InvalidOperationException ex)
             {
-                return Result<Book>.Failure(ErrorType.ValidationError, "One or more genre IDs are invalid.");
+                return Result<Book>.Failure(ErrorType.ValidationError, ex.Message);
             }
-
-            var book = new Book
-            {
-                Title = createBookCommand.Title,
-                Description = createBookCommand.Description,
-                Isbn = createBookCommand.Isbn,
-                PublishedDate = createBookCommand.PublishedDate,
-                Genres = genres,
-                Authors = authors
-            };
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
             return Result<Book>.Success(book);
@@ -126,53 +108,48 @@ namespace Application.Services.Books
                 return Result<Book>.Failure(ErrorType.NotFound, "Book not found.");
             }
 
-            book.Title = replaceBookCommand.Title;
-            book.Isbn = replaceBookCommand.Isbn;
-            book.Description = replaceBookCommand.Description;
-            book.PublishedDate = replaceBookCommand.PublishedDate;
+            Isbn? isbn = null;
 
-
-            if (replaceBookCommand.AuthorIds is null || !replaceBookCommand.AuthorIds.Any())
-                return Result<Book>.Failure(ErrorType.ValidationError, "At least one author is required.");
-
-            if (replaceBookCommand.GenreIds is null || !replaceBookCommand.GenreIds.Any())
-                return Result<Book>.Failure(ErrorType.ValidationError, "At least one genre is required.");
-
-            var genreIds = replaceBookCommand.GenreIds.Distinct().ToList();
-            var authorIds = replaceBookCommand.AuthorIds.Distinct().ToList();
-
-            var genres = await _context.Genres
-            .Where(g => genreIds.Contains(g.Id))
-            .ToListAsync();
-
-            var authors = await _context.Authors
-                .Where(a => authorIds.Contains(a.Id))
-                .ToListAsync();
-
-            if (authors.Count != authorIds.Count)
+            if (replaceBookCommand.Isbn is not null)
             {
-                return Result<Book>.Failure(ErrorType.ValidationError, "One or more author IDs are invalid.");
+                try
+                {
+                    isbn = new Isbn(replaceBookCommand.Isbn);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Result<Book>.Failure(ErrorType.ValidationError, ex.Message);
+                }
+
+                var exists = await _context.Books
+                    .AnyAsync(b => b.Id != book.Id && b.Isbn == isbn);
+
+                if (exists)
+                {
+                    return Result<Book>.Failure(ErrorType.Conflict, "A book with the same ISBN already exists.");
+                }
             }
 
-            if (genres.Count != genreIds.Count)
+            var genresResult = await LoadGenres(replaceBookCommand.GenreIds);
+            if (!genresResult.IsSuccess)
+                return Result<Book>.Failure(genresResult.ErrorType, genresResult.ErrorMessage!);
+
+            var authorsResult = await LoadAuthors(replaceBookCommand.AuthorIds);
+            if (!authorsResult.IsSuccess)
+                return Result<Book>.Failure(authorsResult.ErrorType, authorsResult.ErrorMessage!);
+
+            var genres = genresResult.Value!;
+            var authors = authorsResult.Value!;
+            try
             {
-                return Result<Book>.Failure(ErrorType.ValidationError, "One or more genre IDs are invalid.");
+                book.ReplaceDetails(replaceBookCommand.Title, replaceBookCommand.PublishedDate, isbn, replaceBookCommand.Description, genres, authors);
+                await _context.SaveChangesAsync();
+                return Result<Book>.Success(book);
             }
-
-
-
-            // Replace relations
-            book.Authors.Clear();
-            foreach (var author in authors)
-                book.Authors.Add(author);
-
-            book.Genres.Clear();
-            foreach (var genre in genres)
-                book.Genres.Add(genre);
-
-            await _context.SaveChangesAsync();
-
-            return Result<Book>.Success(book);
+            catch (InvalidOperationException ex)
+            {
+                return Result<Book>.Failure(ErrorType.ValidationError, ex.Message);
+            }
         }
 
         public async Task<Result<Unit>> DeleteBookAsync(int bookId)
@@ -197,68 +174,102 @@ namespace Application.Services.Books
             {
                 return Result<Book>.Failure(ErrorType.NotFound, "Book not found.");
             }
+
             // Update only the fields that are provided
             if (patchBookCommand.Title != null)
-                book.Title = patchBookCommand.Title;
-            if (patchBookCommand.Isbn != null)
-                book.Isbn = patchBookCommand.Isbn;
-            if (patchBookCommand.Description != null)
-                book.Description = patchBookCommand.Description;
-            if (patchBookCommand.PublishedDate.HasValue)
-                book.PublishedDate = patchBookCommand.PublishedDate.Value;
+                book.UpdateTitle(patchBookCommand.Title);
 
-            if (patchBookCommand.AuthorIds != null)
+            if (patchBookCommand.Isbn.HasValue)
             {
-                if(!patchBookCommand.AuthorIds.Any())
+                Isbn? isbn = null;
+                if (patchBookCommand.Isbn.Value != null)
                 {
-                    return Result<Book>.Failure(ErrorType.ValidationError, "At least one author ID must be provided.");
+                    try
+                    {
+                        isbn = new Isbn(patchBookCommand.Isbn.Value);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        return Result<Book>.Failure(ErrorType.ValidationError, ex.Message);
+                    }
+
+                    var exists = await _context.Books
+                        .AnyAsync(b => b.Id != book.Id && b.Isbn == isbn);
+
+                    if (exists)
+                    {
+                        return Result<Book>.Failure(ErrorType.Conflict, "A book with the same ISBN already exists.");
+                    }
                 }
+                book.UpdateIsbn(isbn);
+            }
+            if (patchBookCommand.Description.HasValue)
+            {
+                book.UpdateDescription(patchBookCommand.Description.Value);
+            }
 
-                var authorIds = patchBookCommand.AuthorIds.Distinct().ToList();
-
-                var authors = await _context.Authors
-                    .Where(a => authorIds.Contains(a.Id))
-                    .ToListAsync();
-
-                if (authors.Count != authorIds.Count)
-                {
-                    return Result<Book>.Failure(ErrorType.ValidationError, "One or more author IDs are invalid.");
-                }
-
-                book.Authors.Clear();
-                foreach (var author in authors)
-                {
-                    book.Authors.Add(author);
-                }
+            if (patchBookCommand.PublishedDate.HasValue)
+            {
+                book.UpdatePublishedDate(patchBookCommand.PublishedDate.Value);
             }
 
             if (patchBookCommand.GenreIds != null)
             {
-                if (!patchBookCommand.GenreIds.Any())
-                {
-                    return Result<Book>.Failure(ErrorType.ValidationError, "At least one genre ID must be provided.");
-                }
+                var genresResult = await LoadGenres(patchBookCommand.GenreIds);
+                if (!genresResult.IsSuccess)
+                    return Result<Book>.Failure(genresResult.ErrorType, genresResult.ErrorMessage!);
 
-                var genreIds = patchBookCommand.GenreIds.Distinct().ToList();
-
-                var genres = await _context.Genres
-                    .Where(g => genreIds.Contains(g.Id))
-                    .ToListAsync();
-
-                if (genres.Count != genreIds.Count)
-                {
-                    return Result<Book>.Failure(ErrorType.ValidationError, "One or more genre IDs are invalid.");
-                }
-
-                book.Genres.Clear();
-                foreach (var genre in genres)
-                {
-                    book.Genres.Add(genre);
-                }
+                var genres = genresResult.Value!;
+                book.UpdateGenres(genres);
             }
+
+            if (patchBookCommand.AuthorIds != null)
+            {
+                var authorsResult = await LoadAuthors(patchBookCommand.AuthorIds);
+                if (!authorsResult.IsSuccess)
+                    return Result<Book>.Failure(authorsResult.ErrorType, authorsResult.ErrorMessage!);
+
+                var authors = authorsResult.Value!;
+                book.UpdateAuthors(authors);
+            }
+            
 
             await _context.SaveChangesAsync();
             return Result<Book>.Success(book);
+        }
+
+        private async Task<Result<List<Author>>> LoadAuthors(IEnumerable<int> authorIds)
+        {
+            if (authorIds == null || !authorIds.Any())
+                return Result<List<Author>>.Failure(ErrorType.ValidationError, "At least one author ID must be provided.");
+
+            var distinctIds = authorIds.Distinct().ToList();
+
+            var authors = await _context.Authors
+                .Where(a => distinctIds.Contains(a.Id))
+                .ToListAsync();
+
+            if (authors.Count != distinctIds.Count)
+                return Result<List<Author>>.Failure(ErrorType.ValidationError, "One or more author IDs are invalid.");
+
+            return Result<List<Author>>.Success(authors);
+        }
+
+        private async Task<Result<List<Genre>>> LoadGenres(IEnumerable<int> genreIds)
+        {
+            if (genreIds == null || !genreIds.Any())
+                return Result<List<Genre>>.Failure(ErrorType.ValidationError, "At least one genre ID must be provided.");
+
+            var distinctIds = genreIds.Distinct().ToList();
+
+            var genres = await _context.Genres
+                .Where(g => distinctIds.Contains(g.Id))
+                .ToListAsync();
+
+            if (genres.Count != distinctIds.Count)
+                return Result<List<Genre>>.Failure(ErrorType.ValidationError, "One or more genre IDs are invalid.");
+
+            return Result<List<Genre>>.Success(genres);
         }
     }
     

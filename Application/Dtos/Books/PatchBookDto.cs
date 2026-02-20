@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Application.Dtos.Books
@@ -12,13 +13,17 @@ namespace Application.Dtos.Books
         [MaxLength(200)]
         public string? Title { get; set; }
 
-        [MaxLength(13)]
-        public string? Isbn { get; set; }
+        //[MaxLength(13)]
+        //public string? Isbn { get; set; }
 
-        [MaxLength(2000)]
-        public string? Description { get; set; }
+        public JsonElement? Isbn { get; init; }
 
-        public DateOnly? PublishedDate { get; set; }
+        //[MaxLength(2000)]
+        //public string? Description { get; set; }
+
+        public JsonElement? Description { get; init; }
+
+        public JsonElement? PublishedDate { get; set; }
 
         [MinLength(1)]
         public List<int>? AuthorIds { get; set; }

@@ -47,7 +47,12 @@ namespace Application.Services.Persons
 
         public async Task<Result<Unit>> DeletePersonAsync(int id)
         {
-            var person = await _context.Persons.FindAsync(id);
+            var person = await _context.Persons
+                .Include(p => p.Member)
+                .Include(p => p.Employee)
+                .Include(p => p.User)
+                .SingleOrDefaultAsync(p => p.Id == id);
+
             if (person == null)
             {
                 return Result<Unit>.Failure(ErrorType.NotFound, "Person not found.");
@@ -55,11 +60,11 @@ namespace Application.Services.Persons
 
             // TODO: Implement member use cases in which a person can't be anonymized in stead of checking against suspended member status.
             if (person.Member != null && (person.Member.Status == MemberStatus.Active || person.Member.Status == MemberStatus.Suspended))
-                return Result<Unit>.Failure(ErrorType.Forbidden, "Person has active member role and cannot be deleted.");
+                return Result<Unit>.Failure(ErrorType.Conflict, "Person has active member role and cannot be deleted.");
             if (person.Employee != null && person.Employee.Status == EmployeeStatus.Active)
-                return Result<Unit>.Failure(ErrorType.Forbidden, "Person has active employee role and cannot be deleted.");
+                return Result<Unit>.Failure(ErrorType.Conflict, "Person has active employee role and cannot be deleted.");
             if (person.User != null && person.User.Status == UserStatus.Active)
-                return Result<Unit>.Failure(ErrorType.Forbidden, "Person has active user role and cannot be deleted.");
+                return Result<Unit>.Failure(ErrorType.Conflict, "Person has active user role and cannot be deleted.");
 
             person.Anonymize();
             await _context.SaveChangesAsync();

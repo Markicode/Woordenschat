@@ -23,6 +23,6 @@ namespace Domain.Entities
         public List<Loan> Loans { get; set; } = new();
 
         public MemberStatus Status { get; private set; }
-        public DateTime StatusChangedAtUtc { get; private set; }
+        public DateTime? StatusChangedAtUtc { get; private set; }
     }
 }

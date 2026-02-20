@@ -39,16 +39,6 @@ namespace Domain.Entities
             StatusChangedAtUtc = DateTime.UtcNow;
         }
 
-        public bool HasActiveRole()
-        {
-            if (Member != null && (Member.Status == MemberStatus.Active || Member.Status == MemberStatus.Suspended))
-                return true;
-            if (Employee != null && Employee.Status == EmployeeStatus.Active)
-                return true;
-            if (User != null && User.Status == UserStatus.Active)
-                return true;
-            return false;
-        }
 
         public void Activate()
         {
@@ -69,11 +59,6 @@ namespace Domain.Entities
 
         public void Anonymize()
         {
-            if (HasActiveRole())
-            {
-                throw new InvalidOperationException("Person can't have an active role before being anonymized.");
-            }
-
             if (Status == PersonStatus.Anonymized)
                 throw new InvalidOperationException("Person already anonymized.");
 

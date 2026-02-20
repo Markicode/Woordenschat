@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Common;
 
 namespace Application.Services.Books
 {
@@ -10,18 +11,18 @@ namespace Application.Services.Books
     {
         public int BookId { get; }
         public string? Title { get; }
-        public string? Description { get; }
-        public string? Isbn { get; }
-        public DateOnly? PublishedDate { get; }
+        public Optional<string?> Description { get; }
+        public Optional<string?> Isbn { get; }
+        public Optional<DateOnly?> PublishedDate { get; }
         public IReadOnlyCollection<int>? AuthorIds { get; }
         public IReadOnlyCollection<int>? GenreIds { get; }
 
         public PatchBookCommand(
             int bookId,
-            string? isbn,
+            Optional<string?> isbn,
             string? title,
-            string? description,
-            DateOnly? publishedDate,
+            Optional<string?> description,
+            Optional<DateOnly?> publishedDate,
             IReadOnlyCollection<int>? authorIds,
             IReadOnlyCollection<int>? genreIds)
         {

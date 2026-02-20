@@ -11,10 +11,12 @@ namespace Application.Common
     public class Result
     {
         public bool IsSuccess { get; }
-        public ErrorType? ErrorType { get; }
+        public bool IsFailure => !IsSuccess;
+
+        public ErrorType ErrorType { get; }
         public string? ErrorMessage { get; }
 
-        protected Result(bool isSuccess, ErrorType? errorType, string? errorMessage)
+        protected Result(bool isSuccess, ErrorType errorType, string? errorMessage)
         {
             IsSuccess = isSuccess;
             ErrorType = errorType;
@@ -22,13 +24,9 @@ namespace Application.Common
         }
 
         public static Result Success()
-        {
-            return new Result(true, null ,null);
-        }
+            => new Result(true, default, null);
 
         public static Result Failure(ErrorType errorType, string errorMessage)
-        {
-            return new Result(false, errorType, errorMessage);
-        }
+            => new Result(false, errorType, errorMessage);
     }
 }

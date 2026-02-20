@@ -9,9 +9,9 @@ namespace Application.Common
 {
     public class Result<T> : Result
     {
-        public T? Value { get; }
+        public T Value { get; }
 
-        private Result(bool isSuccess, T? value, ErrorType? errorType, string? errorMessage)
+        private Result(bool isSuccess, T value, ErrorType errorType, string? errorMessage)
             : base(isSuccess, errorType, errorMessage)
         {
             Value = value;
@@ -19,14 +19,15 @@ namespace Application.Common
 
         public static Result<T> Success(T value)
         {
-            return new Result<T>(true, value, null, null);
+            if (value is null)
+                throw new ArgumentNullException(nameof(value));
+
+            return new Result<T>(true, value, default, null);
         }
 
         public static new Result<T> Failure(ErrorType errorType, string errorMessage)
-        {
-            return new Result<T>(false, default, errorType, errorMessage);
-        }
+            => new Result<T>(false, default!, errorType, errorMessage);
     }
-    
-    
+
+
 }

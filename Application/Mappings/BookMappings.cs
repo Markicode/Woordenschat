@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities;
+using Domain.ValueObjects;
 
 namespace Application.Mappings
 {
@@ -17,7 +18,7 @@ namespace Application.Mappings
                 Id = book.Id,
                 Title = book.Title,
                 Description = book.Description,
-                Isbn = book.Isbn,
+                Isbn = book.Isbn?.Value,
                 PublishedDate = book.PublishedDate,
                 Genres = book.Genres
                     .OrderBy(g => g.Name)

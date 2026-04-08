@@ -61,7 +61,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBook(CreateBookDto dto)
+        public async Task<IActionResult> CreateBook([FromBody] CreateBookDto dto)
         {
             var createBookCommand = new CreateBookCommand(dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
@@ -82,7 +82,7 @@ namespace WebApi.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> ReplaceBook(int id, ReplaceBookDto dto)
+        public async Task<IActionResult> ReplaceBook(int id, [FromBody] ReplaceBookDto dto)
         {
             var replaceBookCommand = new ReplaceBookCommand(id, dto.Isbn, dto.Title, dto.Description, dto.PublishedDate, dto.AuthorIds, dto.GenreIds);
 
@@ -110,7 +110,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchBook(int id, PatchBookDto dto)
+        public async Task<IActionResult> PatchBook(int id, [FromBody] PatchBookDto dto)
         {
             Optional<DateOnly?> publishedDate = default;
             var isbn = PatchParsingHelper.ParseOptional(dto.Isbn, e => e.GetString());
@@ -161,6 +161,18 @@ namespace WebApi.Controllers
                 return response.ToActionResult(this);
             }
             return Ok(response.Value!.ToDto());
+        }
+
+        [HttpPut("{bookId}/author/{authorId}")]
+        public async Task<IActionResult> AddBookToAuthor(int authorId, int bookId)
+        {
+            //var response = await _authorService.AddBookToAuthorAsync(authorId, bookId);
+        }
+
+        [HttpDelete("{bookId}/author/{authorId}")]
+        public async Task<IActionResult> RemoveBookFromAuthor(int authorId, int bookId)
+        {
+            //var response = await _authorService.RemoveBookFromAuthorAsync(authorId, bookId);
         }
 
     }

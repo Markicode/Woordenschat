@@ -1,9 +1,14 @@
 ﻿
+using Application.Common;
+using Application.Dtos.Authors;
+using Application.Dtos.Books;
 using Application.Mappings;
 using Application.Services.Authors;
+using Application.Services.Books;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using WebApi.Extensions;
-using Application.Dtos.Authors;
+using WebApi.Helpers;
 
 
 namespace WebApi.Controllers
@@ -21,11 +26,11 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetAuthors()
         {
             var response = await _authorService.GetAuthorsAsync();
 
-            if(!response.IsSuccess)
+            if (!response.IsSuccess)
             {
                 return response.ToActionResult(this);
             }
@@ -38,7 +43,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetAuthorById(int id)
         {
             var response = await _authorService.GetAuthorByIdAsync(id);
             if (!response.IsSuccess)
@@ -50,13 +55,8 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(CreateAuthorDto dto)
+        public async Task<IActionResult> CreateAuthor([FromBody] CreateAuthorDto dto)
         {
-            if(string.IsNullOrWhiteSpace(dto.FirstName) || string.IsNullOrWhiteSpace(dto.LastName))
-            {
-                return BadRequest("FirstName and LastName are required.");
-            }
-
             var createAuthorCommand = new CreateAuthorCommand(dto.FirstName, dto.LastName, dto.BirthDate, dto.Bio);
             var response = await _authorService.CreateAuthorAsync(createAuthorCommand);
 
@@ -67,10 +67,76 @@ namespace WebApi.Controllers
 
             var createdAuthor = response.Value!;
             return CreatedAtAction(
-                nameof(GetById),
+                nameof(GetAuthorById),
                 new { id = createdAuthor.Id },
                 createdAuthor.ToDto()
             );
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> ReplaceAuthor(int id, [FromBody] ReplaceAuthorDto dto)
+        {
+            var replaceAuthorCommand = new ReplaceAuthorCommand(id, dto.FirstName, dto.LastName, dto.BirthDate, dto.Bio, dto.Books);
+            var response = await _authorService.ReplaceAuthorAsync(replaceAuthorCommand);
+
+            if (!response.IsSuccess)
+            {
+                return response.ToActionResult(this);
+            }
+
+            return Ok(response.Value.ToWithBooksDto());
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAuthor(int id)
+        {
+            var response = await _authorService.DeleteAuthorAsync(id);
+            if (!response.IsSuccess)
+            {
+                return response.ToActionResult(this);
+            }
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchAuthor(int id, [FromBody] PatchAuthorDto dto)
+        {
+            Optional<DateOnly?> birthDate = default;
+            var bio = PatchParsingHelper.ParseOptional(dto.Bio, e => e.GetString());
+
+            try
+            {
+                birthDate = PatchParsingHelper.ParseOptional(
+                    dto.BirthDate,
+                    e =>
+                    {
+                        if (!DateOnly.TryParseExact(
+                            e.GetString(),
+                            "yyyy-MM-dd",
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
+                            out var date))
+                        {
+                            throw new FormatException("Invalid date format. Use yyyy-MM-dd.");
+                        }
+
+                        return (DateOnly?)date;
+                    });
+            }
+            catch (FormatException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            var patchAuthorCommand = new PatchAuthorCommand(id, dto.FirstName, dto.LastName, bio, birthDate);
+            var response = await _authorService.PatchAuthorAsync(patchAuthorCommand);
+
+            if (!response.IsSuccess)
+            {
+                return response.ToActionResult(this);
+            }
+            return Ok(response.Value!.ToDto());
         }
 
     }

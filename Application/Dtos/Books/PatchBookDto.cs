@@ -40,9 +40,7 @@ namespace Application.Dtos.Books
                 AuthorIds is null &&
                 GenreIds is null)
             {
-                yield return new ValidationResult(
-                    "At least one field must be provided.",
-                    new[] { nameof(PatchBookDto) });
+                yield return new ValidationResult("At least one field must be provided.");
             }
         }
     }

@@ -43,9 +43,9 @@ namespace Domain.Entities
         public void UpdateTitle(string title)
         {
             if (string.IsNullOrWhiteSpace(title))
-                throw new InvalidOperationException("Title cannot be empty");
+                throw new InvalidOperationException("Title can not be empty");
             if (title.Length > 200)
-                throw new InvalidOperationException("Title cannot be over 200 characters.");
+                throw new InvalidOperationException("Title can not be over 200 characters.");
 
             Title = title;
         }
@@ -53,7 +53,7 @@ namespace Domain.Entities
         public void UpdateDescription(string? description)
         {
             if (description?.Length > 2000)
-                throw new InvalidOperationException("Description cannot be over 2000 characters.");
+                throw new InvalidOperationException("Description can not be over 2000 characters.");
 
             Description = description;
         }
@@ -66,7 +66,7 @@ namespace Domain.Entities
         public void UpdatePublishedDate(DateOnly? publishedDate)
         {
             if (publishedDate.HasValue && publishedDate.Value > DateOnly.FromDateTime(DateTime.UtcNow))
-                throw new InvalidOperationException("Published date cannot be in the future");
+                throw new InvalidOperationException("Published date can not be in the future");
 
             PublishedDate = publishedDate;
         }

@@ -1,23 +1,24 @@
-﻿# Library Management System
+﻿# Library Management System (Woordenschat)
 
-A full-stack Library Management System built as a learning-focused project demonstrating modern backend architecture, integration testing, and a typed frontend consuming a REST API.
+A full-stack Library Management System built as a learning-focused project demonstrating modern backend architecture, Domain-Driven Design concepts, integration testing, and a typed frontend consuming a REST API.
 
-The backend is built using ASP.NET Core Web API with Clean Architecture principles, Entity Framework Core, and MySQL, while the frontend is implemented using React + TypeScript.
-
----
+The backend is built using **ASP.NET Core Web API** with **Clean Architecture**, **Entity Framework Core**, and **MySQL**, while the frontend is implemented using **React + TypeScript**.
 
 ## Features
 
 ### Backend
 
 - Full CRUD operations for books (GET, POST, PUT, PATCH, DELETE)
+- Partial updates using a custom PATCH implementation with Optional value semantics
 - Author resource with read and create endpoints
 - Books can belong to multiple genres (many-to-many)
 - Hierarchical genre structure (parent / sub-genres)
-- Clean, RESTful API design
+- Domain-driven entity design with encapsulation and private setters
+- Value Objects (e.g. ISBN) with EF Core value converters
+- Explicit Result-based error handling (no exception-driven flow)
+- Lifecycle status tracking with audit timestamps
 - DTO-based input and output models
 - Explicit mapping between domain models and DTOs
-- Explicit Result-based error handling (no exception-driven flow)
 - Centralized controller error handling via a shared base controller
 - Async data access with Entity Framework Core
 - Swagger / OpenAPI documentation
@@ -29,8 +30,6 @@ The backend is built using ASP.NET Core Web API with Clean Architecture principl
 - Typed service layer for API communication
 - Component-based UI architecture
 - Vite development environment
-
----
 
 ## Tech Stack
 
@@ -52,153 +51,75 @@ The backend is built using ASP.NET Core Web API with Clean Architecture principl
 - **Vite**
 - **Fetch-based API client**
 
----
-
 ## Project Structure
 
-```
-Library.sln
-
-├── Application
-│   ├── Common
-│   ├── Dtos
-│   ├── Enums
-│   ├── Mappings
-│   └── Services
-│
-├── Data
-│   ├── Configurations
-│   ├── Migrations
-│   ├── Seed
-│   └── LibraryContext.cs
-│
-├── Domain
-│   ├── Entities
-│   ├── Enums
-│   └── Interfaces
-│
-├── WebApi
-│   ├── Controllers
-│   ├── Extensions
-│   ├── Json
-│   ├── Properties
-│   ├── Program.cs
-│   └── appsettings.json
-│
-├── WebApi.Tests
-│   ├── Controllers
-│   ├── Helpers
-│   ├── ApiFactory.cs
-│   └── Integration test setup
-│
-└── Frontend (React)
-    ├── src
-    │   ├── components
-    │   ├── pages
-    │   ├── services
-    │   └── models
-    ├── package.json
-    └── vite.config.ts
-```
-
----
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Library.sln  ├── Application  │   ├── Common (Result pattern, Optional, helpers)  │   ├── Dtos  │   ├── Enums  │   ├── Mappings  │   ├── Services  │   └── Commands  │  ├── Data  │   ├── Configurations  │   ├── Migrations  │   ├── Seed  │   └── LibraryContext.cs  │  ├── Domain  │   ├── Entities  │   ├── Enums  │   ├── ValueObjects  │   ├── Validation  │   └── Interfaces  │  ├── WebApi  │   ├── Controllers  │   ├── Extensions  │   ├── Helpers  │   ├── Json  │   └── Program.cs  │  ├── WebApi.Tests  │   ├── Controllers  │   ├── Helpers  │   └── Integration setup  │  └── Frontend (React)   `
 
 ## Architectural Overview
 
-This project follows a layered architecture inspired by **Clean Architecture** principles.
+This project follows a layered architecture inspired by **Clean Architecture** and introduces selected **DDD patterns**.
 
-### Layers
-
-#### Domain
+### Domain
 
 - Core business entities
-- Business rules and interfaces
-- No dependencies on other layers
+- Value Objects (e.g. ISBN)
+- Lifecycle state tracking
+- Encapsulation via private setters and domain methods
+- Business invariants and validation
 
-#### Application
+### Application
 
 - Use-case driven application services
 - DTO definitions
 - Mapping logic between entities and DTOs
 - Business workflow orchestration
+- Result pattern for explicit success/failure modeling
+- Optional value semantics for PATCH operations
 
-#### Data
+### Data
 
 - Persistence logic
 - EF Core DbContext
 - Entity configurations
+- ValueObject converters
 - Database migrations
 - Seed data
 
-#### WebApi
+### WebApi
 
 - HTTP controllers
 - Request / response handling
 - Delegation to application services
 - Centralized error mapping
+- PATCH parsing helpers
 
-#### Frontend
+### Frontend
 
 - React UI consuming REST endpoints
 - Typed service layer communicating with API
 - Component-based interface
 
-### Controllers
+## Error Handling Strategy
 
-Controllers are intentionally kept thin and inherit from a shared `BaseApiController`.
+The application uses an explicit Result / Result pattern.
 
-Responsibilities:
-
-- Translate HTTP requests into application commands
-- Delegate all business logic to application services
-- Convert application results into HTTP responses
-
-All controllers follow a consistent pattern:
-
-- Call application service
-- A shared BaseApiController is used to centralize error-to-HTTP mapping and keep controllers consistent and minimal
-- Map successful results to DTOs
-
-### DTO Usage
-
-DTOs are used to:
-
-- Decouple internal domain models from external API contracts
-- Prevent overexposing domain entities
-- Enable safe refactoring of internal architecture without breaking API behavior
-
-### Error Handling Strategy
-
-The application uses an explicit `Result` / `Result<T>` pattern to handle success and failure cases.
-
-- Application services return `Result<T>` instead of throwing exceptions for expected error scenarios
-- Errors are categorized using an `ErrorType` enum (e.g. NotFound, ValidationError, Conflict)
+- Application services return Result types instead of throwing exceptions for expected scenarios
+- Errors are categorized using an ErrorType enum
 - HTTP error mapping is handled centrally in the WebApi layer
 - Controllers remain thin and free of duplicated error-handling logic
 
-This approach makes control flow explicit, improves testability, and avoids exception-driven business logic.
+This approach improves:
 
----
+- testability
+- readability
+- explicit control flow
+- domain clarity
 
 ## API Overview
 
-| Method | Endpoint          | Description                           |
-| ------ | ----------------- | ------------------------------------- |
-| GET    | /api/books        | Get all books                         |
-| GET    | /api/books/{id}   | Get a book by ID                      |
-| POST   | /api/books        | Create a new book                     |
-| PUT    | /api/books/{id}   | Replace an existing book              |
-| PATCH  | /api/books/{id}   | Partially update an existing book     |
-| DELETE | /api/books/{id}   | Delete an existing book               |
-| GET    | /api/genres       | Get all genres                        |
-| GET    | /api/genres/{id}  | Get a genre by ID                     |
-| GET    | /api/authors      | Get all authors (without books)       |
-| GET    | /api/authors/{id} | Get an author by ID (including books) |
-| POST   | /api/authors      | Create a new author                   |
+MethodEndpointDescriptionGET/api/booksGet all booksGET/api/books/{id}Get a book by IDPOST/api/booksCreate a new bookPUT/api/books/{id}Replace an existing bookPATCH/api/books/{id}Partially update an existing bookDELETE/api/books/{id}Delete an existing bookGET/api/genresGet all genresGET/api/genres/{id}Get a genre by IDGET/api/authorsGet all authorsGET/api/authors/{id}Get author with booksPOST/api/authorsCreate author
 
-Full API documentation is available via **Swagger** when running the project.
-
----
+Swagger documentation is available when running the project.
 
 ## Getting Started
 
@@ -210,79 +131,59 @@ Full API documentation is available via **Swagger** when running the project.
 
 ### Setup
 
-1. Clone the repository
-2. Configure the database connection in `appsettings.json`
-3. Apply database migrations
-4. Run the API
+1.  Clone the repository
+2.  Configure database connection in appsettings.json
+3.  Apply database migrations
+4.  Run the API
 
-```bash
-dotnet ef database update
-dotnet run
-```
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   dotnet ef database update  dotnet run   `
 
 Swagger will be available at:
 
-```url
-https://localhost:<port>/swagger
-```
-
----
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   https://localhost:/swagger   `
 
 ## Testing
 
 This project includes automated integration tests using **xUnit**.
 
-The tests run against the API using a test host (`WebApplicationFactory`),
-exercising the full HTTP request pipeline including routing, controllers,
-dependency injection, and Entity Framework Core.
+Tests run against the API using a test host (WebApplicationFactory) and validate:
 
-Current test coverage includes:
+- End-to-end HTTP behavior
+- RESTful status codes
+- Validation scenarios
+- Error mapping
+- Database interactions
+- Result pattern correctness
 
-- Happy-path API behavior for books, authors, and genres
-- Validation and not-found scenarios
-- End-to-end HTTP request/response validation
-- Database interaction through EF Core
-- Verification of RESTful status codes
+Run tests with:
 
-Tests are executed using:
-
-```bash
-dotnet test
-```
-
-The testing setup is intentionally focused on integration tests to validate
-realistic API behavior. Unit tests and additional edge-case coverage are
-planned as future improvements.
-
----
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   dotnet test   `
 
 ## Learning Goals
 
 This project was created to practice and demonstrate:
 
-- Clean API design
-- Layered / Clean Architecture principles
-- Entity Framework Core relationships
-- DTO mapping strategies
-- Asynchronous programming in ASP.NET Core
-- Database migrations and seeding
-- Refactoring for separation of concerns
-- Writing maintainable and testable code
-
----
+- Clean Architecture
+- Domain-driven design concepts
+- Value Objects and EF Core converters
+- PATCH semantics and partial updates
+- Explicit error modeling with Result pattern
+- Migration discipline and schema evolution
+- Integration testing strategies
+- API design best practices
+- Backend refactoring techniques
 
 ## Future Improvements
 
-- Add user authentication and authorization
-- Implement pagination and filtering for book listings
-- Improved validation and error handling
-- Additional API endpoints and resources
-- Advanced frontend features
-- CI pipeline
-- Expanded integration test coverage (edge cases, error scenarios)
-- Unit tests for domain and service logic
-
----
+- Authentication and authorization
+- Pagination and filtering
+- Domain events
+- Background jobs
+- Caching
+- Advanced validation pipeline
+- CQRS / MediatR exploration
+- Expanded integration and unit testing
+- CI/CD pipeline
 
 ## License
 

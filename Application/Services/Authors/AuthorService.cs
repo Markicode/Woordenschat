@@ -42,15 +42,7 @@ namespace Application.Services.Authors
 
         public async Task<Result<Author>> CreateAuthorAsync(CreateAuthorCommand createAuthorCommand)
         {
-
-
-            var author = new Author
-            {
-                FirstName = createAuthorCommand.FirstName,
-                LastName = createAuthorCommand.LastName,
-                Bio = createAuthorCommand.Bio,
-                BirthDate = createAuthorCommand.BirthDate
-            };
+            var author = new Author(createAuthorCommand.FirstName, createAuthorCommand.LastName, createAuthorCommand.Bio, createAuthorCommand.BirthDate);
 
             _context.Authors.Add(author);
             await _context.SaveChangesAsync();

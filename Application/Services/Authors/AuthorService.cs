@@ -1,13 +1,15 @@
-﻿using System;
+﻿using Application.Common;
+using Application.Enums;
+using Application.Services.Books;
+using Data;
+using Domain.Entities;
+using Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Application.Common;
-using Data;
-using Domain.Entities;
-using Microsoft.EntityFrameworkCore;
-using Application.Enums;
 
 namespace Application.Services.Authors
 {
@@ -51,8 +53,25 @@ namespace Application.Services.Authors
 
         public async Task<Result<Author>> ReplaceAuthorAsync(ReplaceAuthorCommand replaceAuthorCommand)
         {
-            // Implementation for updating an existing author
-            throw new NotImplementedException();
+
+            var author = await _context.Authors
+                .FirstOrDefaultAsync(a => a.Id == replaceAuthorCommand.Id);
+
+            if (author == null)
+            {
+                return Result<Author>.Failure(ErrorType.NotFound, "Author not found.");
+            }
+
+            try
+            {
+                author.ReplaceDetails(replaceAuthorCommand.FirstName, replaceAuthorCommand.LastName, replaceAuthorCommand.Bio, replaceAuthorCommand.BirthDate);
+                await _context.SaveChangesAsync();
+                return Result<Author>.Success(author);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Result<Author>.Failure(ErrorType.ValidationError, ex.Message);
+            }
         }
 
         public async Task<Result<Unit>> DeleteAuthorAsync(int id)
@@ -66,6 +85,24 @@ namespace Application.Services.Authors
             // Implementation for partially updating an author
             throw new NotImplementedException();
         }
+
+        /*private async Task<Result<List<Book>>> LoadBooks(IEnumerable<int> bookIds)
+        {
+            if (authorIds == null || !authorIds.Any())
+                return Result<List<Author>>.Failure(ErrorType.ValidationError, "At least one author ID must be provided.");
+
+            var distinctIds = authorIds.Distinct().ToList();
+
+            var authors = await _context.Authors
+                .Where(a => distinctIds.Contains(a.Id))
+                .ToListAsync();
+
+            if (authors.Count != distinctIds.Count)
+                return Result<List<Author>>.Failure(ErrorType.ValidationError, "One or more author IDs are invalid.");
+
+            return Result<List<Author>>.Success(authors);
+        }
+        */
     }
 
 

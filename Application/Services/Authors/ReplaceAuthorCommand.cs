@@ -13,16 +13,14 @@ namespace Application.Services.Authors
         public string LastName { get; init; }
         public DateOnly? BirthDate { get; init; }
         public string? Bio { get; init; }
-        public IEnumerable<int>? Books { get; init; }
 
-        public ReplaceAuthorCommand(int id, string firstName, string lastName, DateOnly? birthDate, string? bio, List<int>? books)
+        public ReplaceAuthorCommand(int id, string firstName, string lastName, DateOnly? birthDate, string? bio)
         {
             Id = id;
             FirstName = firstName;
             LastName = lastName;
             BirthDate = birthDate;
             Bio = bio;
-            Books = books;
         }
     }
 }

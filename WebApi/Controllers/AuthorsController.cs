@@ -76,7 +76,7 @@ namespace WebApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> ReplaceAuthor(int id, [FromBody] ReplaceAuthorDto dto)
         {
-            var replaceAuthorCommand = new ReplaceAuthorCommand(id, dto.FirstName, dto.LastName, dto.BirthDate, dto.Bio, dto.Books);
+            var replaceAuthorCommand = new ReplaceAuthorCommand(id, dto.FirstName, dto.LastName, dto.BirthDate, dto.Bio);
             var response = await _authorService.ReplaceAuthorAsync(replaceAuthorCommand);
 
             if (!response.IsSuccess)

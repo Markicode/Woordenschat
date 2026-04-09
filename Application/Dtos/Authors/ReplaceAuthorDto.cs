@@ -23,6 +23,5 @@ namespace Application.Dtos.Authors
         [MaxLength(2000)]
         public string? Bio { get; set; }
 
-        public List<int> Books { get; set; } = new();
     }
 }
